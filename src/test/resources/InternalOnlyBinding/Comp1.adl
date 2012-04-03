@@ -1,0 +1,7 @@
+@Singleton
+composite Comp1 {
+	contains ClientPrimitive as clt;
+	contains ServerPrimitive as srv;
+	
+	binds clt.client to srv.server;	
+}

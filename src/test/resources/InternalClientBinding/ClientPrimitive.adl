@@ -1,0 +1,12 @@
+@Singleton
+primitive ClientPrimitive {
+	requires dummy as client;
+
+	source {{
+		int main(void)
+		{
+			CALL(client,run)();
+			return 0;
+		}
+	}}
+}
