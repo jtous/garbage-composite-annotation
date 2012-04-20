@@ -53,7 +53,7 @@ AbstractADLLoaderAnnotationProcessor {
 			final Node node, final Definition composite,
 			final ADLLoaderPhase phase, final Map<Object, Object> context) {
 		boolean finishedGarbaging = false;
-		DumpDotAnnotationProcessor plop = new DumpDotAnnotationProcessor();
+//		DumpDotAnnotationProcessor plop = new DumpDotAnnotationProcessor();
 
 
 		while(!finishedGarbaging) {
@@ -68,9 +68,9 @@ AbstractADLLoaderAnnotationProcessor {
 					{
 						finishedGarbaging = false;
 						removeComposite( composite, subComponent);
-						plop.processAnnotation( new DumpDot(),
-								 node,  composite,
-								 phase,  context);
+//						plop.processAnnotation( new DumpDot(),
+//								 node,  composite,
+//								 phase,  context);
 						break;
 					}
 				} catch (ADLException e) {
