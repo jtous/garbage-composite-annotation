@@ -158,10 +158,11 @@ AbstractADLLoaderAnnotationProcessor {
 					if ((binding.getToComponent().equals(composite.getName())) && (binding.getToInterface().equals(thisItf))) {
 						binding.setToComponent(compName + "_" + subToComp);
 						binding.setToInterface(subBinding.getToInterface());
+						binding.setToInterfaceNumber(subBinding.getToInterfaceNumber());
 						((BindingContainer) compDef).removeBinding(subBinding);
 					}
 				}
-			} else if (subToComp.equals(Binding.THIS_COMPONENT))  {
+			} else if (subToComp.equals(Binding.THIS_COMPONENT)) {
 				//Treatement in the next for loop
 			} else {
 				((BindingContainer) upperComposite).addBinding(subBinding);
@@ -180,6 +181,7 @@ AbstractADLLoaderAnnotationProcessor {
 						subBinding.setFromComponent(compName + "_" + subBinding.getFromComponent());
 						subBinding.setToComponent(toComp);
 						subBinding.setToInterface(binding.getToInterface());
+						subBinding.setToInterfaceNumber(binding.getToInterfaceNumber());
 						((BindingContainer) compDef).removeBinding(subBinding);
 						((BindingContainer) upperComposite).addBinding(subBinding);
 					}

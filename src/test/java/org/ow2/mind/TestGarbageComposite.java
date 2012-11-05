@@ -121,6 +121,27 @@ public class TestGarbageComposite extends AbstractFunctionalTest {
 	}
 	
 	@Test(groups = {"checkin"})
+	public void internalClientCollectionToSimpleBinding1() throws Exception {
+		cleanBuildDir();
+		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"InternalClientCollectionToSimpleBinding");
+		runner.compileRunAndCheck("InternalClientBinding1", null);
+	}
+	
+	@Test(groups = {"checkin"})
+	public void internalClientCollectionToSimpleBinding2() throws Exception {
+		cleanBuildDir();
+		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"InternalClientCollectionToSimpleBinding");
+		runner.compileRunAndCheck("InternalClientBinding2", null);
+	}
+
+	@Test(groups = {"checkin"})
+	public void internalClientCollectionToSimpleBinding3() throws Exception {
+		cleanBuildDir();
+		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"InternalClientCollectionToSimpleBinding");
+		runner.compileRunAndCheck("InternalClientBinding3", null);
+	}
+	
+	@Test(groups = {"checkin"})
 	public void internalClientBinding1() throws Exception {
 		cleanBuildDir();
 		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"InternalClientBinding");
