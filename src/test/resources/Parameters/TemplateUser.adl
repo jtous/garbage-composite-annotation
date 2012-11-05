@@ -1,0 +1,3 @@
+@GarbageComposite
+composite TemplateUser extends Template<SimplePrimitive(8)> {
+}

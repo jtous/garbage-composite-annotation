@@ -23,59 +23,88 @@
 package org.ow2.mind.adl.annotations;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.Map;
 
 import org.objectweb.fractal.adl.ADLException;
 import org.objectweb.fractal.adl.Definition;
 import org.objectweb.fractal.adl.Node;
-import org.objectweb.fractal.adl.interfaces.Interface;
-import org.objectweb.fractal.adl.interfaces.InterfaceContainer;
-import org.objectweb.fractal.adl.types.TypeInterface;
+import org.objectweb.fractal.adl.NodeFactory;
+import org.objectweb.fractal.adl.merger.NodeMerger;
 import org.ow2.mind.adl.annotation.ADLLoaderPhase;
 import org.ow2.mind.adl.annotation.AbstractADLLoaderAnnotationProcessor;
+import org.ow2.mind.adl.annotation.predefined.Singleton;
 import org.ow2.mind.adl.ast.ASTHelper;
 import org.ow2.mind.adl.ast.Binding;
 import org.ow2.mind.adl.ast.BindingContainer;
 import org.ow2.mind.adl.ast.Component;
 import org.ow2.mind.adl.ast.ComponentContainer;
-import org.ow2.mind.adl.ast.ImplementationContainer;
-import org.ow2.mind.adl.ast.MindInterface;
-import org.ow2.mind.adl.ast.Source;
+import org.ow2.mind.adl.ast.DefinitionReference;
 import org.ow2.mind.annotation.Annotation;
+import org.ow2.mind.annotation.AnnotationHelper;
+import org.ow2.mind.adl.parameter.ast.Argument;
+import org.ow2.mind.adl.parameter.ast.ArgumentContainer;
+import org.ow2.mind.adl.parameter.ast.FormalParameter;
+import org.ow2.mind.adl.parameter.ast.FormalParameterContainer;
+import org.ow2.mind.value.ast.Reference;
+import org.ow2.mind.value.ast.Value;
+
+import static org.ow2.mind.adl.parameter.ast.ParameterASTHelper.turnsToArgumentContainer;
+import static org.ow2.mind.adl.parameter.ast.ParameterASTHelper.turnsToParamContainer;
+import com.google.inject.Inject;
 
 /**
  * @author Julien TOUS
  */
 public class GarbageCompositeAnnotationProcessor extends
 AbstractADLLoaderAnnotationProcessor {
+	  @Inject
+	  protected NodeFactory                 nodeFactoryItf;
 
+	  @Inject
+	  protected NodeMerger                  nodeMergerItf;
+	  
 	private boolean garbage(final Annotation annotation,
 			final Node node, final Definition composite,
 			final ADLLoaderPhase phase, final Map<Object, Object> context) {
 		boolean finishedGarbaging = false;
 //		DumpDotAnnotationProcessor plop = new DumpDotAnnotationProcessor();
 
-
 		while(!finishedGarbaging) {
 			finishedGarbaging = true;
 			Component[] subComponents = ((ComponentContainer) composite).getComponents();
 			for (Component subComponent : subComponents) {	
 				Definition subCompDef;
-				try {
-					subCompDef = ASTHelper.getResolvedDefinition(subComponent
-							.getDefinitionReference(), null, null);
-					if (ASTHelper.isComposite(subCompDef))
-					{
-						finishedGarbaging = false;
-						removeComposite( composite, subComponent);
-//						plop.processAnnotation( new DumpDot(),
-//								 node,  composite,
-//								 phase,  context);
-						break;
+				DefinitionReference subCompDefRef;
+				subCompDefRef = subComponent.getDefinitionReference();
+				if (subCompDefRef != null) { 
+					//if null we are probably dealing with a template on the after check phase.
+					//Annotation will be re-processed on the template instantiation phase 
+					try {
+						subCompDef = ASTHelper.getResolvedDefinition(subCompDefRef, null, null);
+						if (ASTHelper.isComposite(subCompDef))
+						{
+							finishedGarbaging = false;
+							removeComposite( composite, subComponent);
+							//						if (phase == ADLLoaderPhase.AFTER_TEMPLATE_INSTANTIATE ) {
+							//						plop.processAnnotation( new DumpDot(),
+							//								node,  composite,
+							//								phase,  context);
+							//						}
+							break;
+						}
+					} catch (ADLException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
-				} catch (ADLException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				} else {
+					try {
+						if (AnnotationHelper.getAnnotation(composite, GarbageComposite.class) == null)
+							AnnotationHelper.addAnnotation(composite, new GarbageComposite());
+					} catch (ADLException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}	
 				}
 			}
 		}
@@ -83,12 +112,36 @@ AbstractADLLoaderAnnotationProcessor {
 	}
 
 	private void removeComposite(Definition upperComposite, Component composite) throws ADLException{
-		Definition compDef = ASTHelper.getResolvedDefinition(composite.getDefinitionReference(), null, null);
+		DefinitionReference compDefRef = composite.getDefinitionReference();
+		Definition compDef = ASTHelper.getResolvedDefinition(compDefRef, null, null);
 		Binding[] upperBindings = ((BindingContainer) upperComposite).getBindings();
+        
+		FormalParameter[] compParameters = turnsToParamContainer(compDef, nodeFactoryItf, nodeMergerItf).getFormalParameters();
+		Argument[] compArguments = turnsToArgumentContainer(compDefRef, nodeFactoryItf, nodeMergerItf).getArguments();
 		
 		String compName = composite.getName();
 		final Component[] subComponents = ((ComponentContainer) compDef).getComponents();
 		for (Component subComponent : subComponents) {
+			DefinitionReference subCompDefRef = subComponent.getDefinitionReference();
+			Definition subCompDef = ASTHelper.getResolvedDefinition(subCompDefRef, null, null);
+			FormalParameter[] subCompParameters = turnsToParamContainer(subCompDef, nodeFactoryItf, nodeMergerItf).getFormalParameters();
+			Argument[] subCompArguments = turnsToArgumentContainer(subCompDefRef, nodeFactoryItf, nodeMergerItf).getArguments();
+	            
+			for (Argument compArgument : compArguments) {
+				for (Argument subCompArgument : subCompArguments) {
+					Value v = subCompArgument.getValue();
+					String vv;
+					if (v instanceof Reference)
+						vv = ((Reference) v ).getRef();
+					else
+						vv = ((Value) v).toString(); 
+					if (compArgument.getName().equals(vv)) {
+						subCompArgument.setValue(compArgument.getValue());
+						System.out.println("");
+					}
+				}
+			}
+			
 			String subSubName = compName + "_" + subComponent.getName();
 			subComponent.setName(subSubName);
 			((ComponentContainer) upperComposite).addComponent(subComponent);
@@ -151,7 +204,6 @@ AbstractADLLoaderAnnotationProcessor {
 			final ADLLoaderPhase phase, final Map<Object, Object> context)
 					throws ADLException {
 		assert annotation instanceof GarbageComposite;
-
 
 		if (ASTHelper.isComposite(definition)) {
 			garbage(annotation,

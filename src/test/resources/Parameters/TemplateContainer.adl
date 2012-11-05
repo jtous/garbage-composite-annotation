@@ -1,0 +1,4 @@
+//@GarbageComposite
+composite TemplateContainer {
+ contains TemplateUser as plop;
+}

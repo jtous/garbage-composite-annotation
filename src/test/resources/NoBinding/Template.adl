@@ -1,0 +1,4 @@
+@GarbageComposite
+composite Template<ParamComp conformsto AnyComponentType> {
+	contains ParamComp as comp;
+}

@@ -57,12 +57,67 @@ public class TestGarbageComposite extends AbstractFunctionalTest {
 		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"NoBinding");
 		runner.compileRunAndCheck("NoBinding2", null);
 	}
-
+	
+	@Test(groups = {"checkin"})
+	public void testTemplateUser() throws Exception {
+		cleanBuildDir();
+		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"NoBinding");
+		runner.compileRunAndCheck("TemplateUser", null);
+	}
+	
+	@Test(groups = {"checkin"})
+	public void testTemplateContainer() throws Exception {
+		cleanBuildDir();
+		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"NoBinding");
+		runner.compileRunAndCheck("TemplateContainer", null);
+	}
+	
+	@Test(groups = {"checkin"})
+	public void testParameters() throws Exception {
+		cleanBuildDir();
+		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"Parameters");
+		runner.compileRunAndCheck("NoBinding1", null);
+	}
+	
+	@Test(groups = {"checkin"})
+	public void testNestedParameters() throws Exception {
+		cleanBuildDir();
+		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"Parameters");
+		runner.compileRunAndCheck("NoBinding2", null);
+	}
+	
+	@Test(groups = {"checkin"})
+	public void testParameterTemplateContainer() throws Exception {
+		cleanBuildDir();
+		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"Parameters");
+		runner.compileRunAndCheck("TemplateContainer", null);
+	}
 	@Test(groups = {"checkin"})
 	public void internalOnlyBinding() throws Exception {
 		cleanBuildDir();
 		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"InternalOnlyBinding");
 		runner.compileRunAndCheck("InternalOnlyBinding", null);
+	}
+	
+	@Test(groups = {"checkin"})
+	public void internalClientCollectionBinding1() throws Exception {
+		cleanBuildDir();
+		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"InternalClientCollectionBinding");
+		runner.compileRunAndCheck("InternalClientBinding1", null);
+	}
+	
+	@Test(groups = {"checkin"})
+	public void internalClientCollectionBinding2() throws Exception {
+		cleanBuildDir();
+		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"InternalClientCollectionBinding");
+		runner.compileRunAndCheck("InternalClientBinding2", null);
+	}
+
+	@Test(groups = {"checkin"})
+	public void internalClientCollectionBinding3() throws Exception {
+		cleanBuildDir();
+		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"InternalClientCollectionBinding");
+		runner.compileRunAndCheck("InternalClientBinding3", null);
 	}
 	
 	@Test(groups = {"checkin"})

@@ -31,7 +31,7 @@ import org.ow2.mind.annotation.AnnotationTarget;
 /**
  * @author Julien TOUS
  */
-@ADLLoaderProcessor(processor = GarbageCompositeAnnotationProcessor.class, phases = { ADLLoaderPhase.AFTER_CHECKING })
+@ADLLoaderProcessor(processor = GarbageCompositeAnnotationProcessor.class, phases = { ADLLoaderPhase.AFTER_CHECKING, ADLLoaderPhase.AFTER_TEMPLATE_INSTANTIATE })
 public class GarbageComposite implements Annotation {
 
     /**

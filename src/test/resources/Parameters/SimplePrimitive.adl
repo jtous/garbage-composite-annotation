@@ -1,0 +1,11 @@
+@Singleton
+primitive SimplePrimitive(primitiveParameter) {
+	attribute int attr = primitiveParameter;
+	source {{
+		int main(void)
+		{
+			//attr has been set to 8, we need to return 0 to pass the test ...
+			return ATTR(attr)-8;
+		}
+	}};
+}

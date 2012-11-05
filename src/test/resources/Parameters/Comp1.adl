@@ -1,0 +1,3 @@
+composite Comp1 {
+	contains SimplePrimitive(8) as Main;
+}
