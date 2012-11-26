@@ -1,0 +1,8 @@
+composite Comp3 {
+	provides dummy as server1;
+	provides dummy as server2;
+	contains Comp1 as srv;
+	
+	binds this.server1 to srv.server;	
+	binds this.server2 to srv.server;	
+}

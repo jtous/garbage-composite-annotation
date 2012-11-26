@@ -1,0 +1,6 @@
+composite Comp1 {
+	provides dummy as server;
+	contains ServerPrimitive as srv;
+	
+	binds this.server to srv.server;	
+}

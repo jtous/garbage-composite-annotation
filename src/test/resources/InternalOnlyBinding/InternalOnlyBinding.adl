@@ -1,0 +1,5 @@
+@GarbageComposite
+@Singleton
+composite InternalOnlyBinding {
+	contains Comp1 as Comp1;
+}
