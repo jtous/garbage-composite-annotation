@@ -41,7 +41,8 @@ public class TestGarbageComposite extends AbstractFunctionalTest {
 			for (final File subFile : f.listFiles())
 				deleteDir(subFile);
 		}
-		assertTrue(f.delete(), "Can't delete \"" + f + "\".");
+		f.delete();
+		assertTrue(!f.exists(), "Couldn't delete \"" + f + "\".");
 	}
 	
 	@Test(groups = {"checkin"})
