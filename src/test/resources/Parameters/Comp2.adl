@@ -1,0 +1,3 @@
+composite Comp2(comp2Parameter) {
+	contains SimplePrimitive(comp2Parameter) as Main;
+}

@@ -1,0 +1,14 @@
+primitive ServerPrimitive {
+	provides dummy as server[2];
+
+	source {{
+		void METH(server[0],run)(void)
+		{
+			return;
+		}
+		void METH(server[1],run)(void)
+		{
+			return;
+		}
+	}}
+}

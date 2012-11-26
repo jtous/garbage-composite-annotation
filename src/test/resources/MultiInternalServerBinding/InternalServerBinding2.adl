@@ -1,0 +1,8 @@
+@GarbageComposite
+@Singleton
+composite InternalServerBinding2 {
+	contains ServerPrimitive as srv;
+	contains Comp2 as Comp2;
+	
+	binds Comp2.client to srv.server;
+}

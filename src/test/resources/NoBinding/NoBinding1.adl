@@ -1,0 +1,4 @@
+@GarbageComposite
+composite NoBinding1 {
+	contains Comp1 as Comp1;
+}

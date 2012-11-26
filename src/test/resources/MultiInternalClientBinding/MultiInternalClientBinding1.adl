@@ -1,0 +1,9 @@
+@GarbageComposite
+@Singleton
+composite MultiInternalClientBinding1 {
+	contains ClientPrimitive as clt;
+	contains Comp1 as Comp1;
+	
+	binds clt.client1 to Comp1.server;
+	binds clt.client2 to Comp1.server;
+}

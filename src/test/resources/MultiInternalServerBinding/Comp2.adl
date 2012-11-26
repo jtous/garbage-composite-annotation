@@ -1,0 +1,7 @@
+@Singleton
+composite Comp2 {
+	requires dummy as client;
+	contains Comp1 as clt;
+	
+	binds clt.client to this.client;	
+}
