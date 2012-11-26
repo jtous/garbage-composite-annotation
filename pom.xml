@@ -9,11 +9,11 @@
         <version>2.0-alpha2-SNAPSHOT</version>
     </parent>
 
-    <artifactId>garbagecomposite-annotation</artifactId>
+    <artifactId>garbage-composite-annotation</artifactId>
     <packaging>jar</packaging>
-    <name>GarbageComposite Annotation</name>
+    <name>Garbage Composite Annotation</name>
     
-    <description>GarbageComposite annotation for the Mind programming model.</description>
+    <description>Garbage Composite annotation for the Mind programming model.</description>
     
     <properties>
         <mind.test.cflags>-g -Wall -Werror -Wredundant-decls -Wunreachable-code
