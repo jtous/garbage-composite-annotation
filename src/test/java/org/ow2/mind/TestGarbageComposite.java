@@ -41,7 +41,7 @@ public class TestGarbageComposite extends AbstractFunctionalTest {
 			for (final File subFile : f.listFiles())
 				deleteDir(subFile);
 		}
-		f.delete();
+		while (!f.delete());
 		assertTrue(!f.exists(), "Couldn't delete \"" + f + "\".");
 	}
 	
