@@ -1,7 +1,7 @@
 @Singleton
 composite Comp1 {
 	requires dummy as client1;
-	requires dummy as client1;
+	requires dummy as client2;
 	
 	contains ClientPrimitive as clt;
 	

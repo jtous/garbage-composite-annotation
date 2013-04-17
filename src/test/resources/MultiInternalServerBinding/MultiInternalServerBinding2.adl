@@ -1,6 +1,6 @@
 @GarbageComposite
 @Singleton
-composite InternalServerBinding2 {
+composite MultiInternalServerBinding2 {
 	contains ServerPrimitive as srv;
 	contains Comp2 as Comp2;
 	
