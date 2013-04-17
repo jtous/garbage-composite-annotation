@@ -55,6 +55,7 @@ import com.google.inject.Inject;
 
 /**
  * @author Julien TOUS
+ * @contributor Stephane SEYVOZ
  */
 public class GarbageCompositeAnnotationProcessor extends
 AbstractADLLoaderAnnotationProcessor {
@@ -290,6 +291,12 @@ AbstractADLLoaderAnnotationProcessor {
 								// handle collections
 								currLevel1Binding.setToInterfaceNumber(currLevel2ThisBinding.getToInterfaceNumber());
 								
+								/*
+								 *  no other info update since we really modify the composite definition (even if the composite
+								 *  is used in other places in the architecture, the sub-modifications would be identical, so we allow
+								 *  such modification). TODO: check if this is true according to templates ?
+								 */
+								
 								// no binding level-up since we modify existing ones (source-driven)
 							}
 						}
@@ -302,24 +309,35 @@ AbstractADLLoaderAnnotationProcessor {
 									&& (((currLevel1Binding.getFromInterfaceNumber() != null && currLevel2ThisBinding.getToInterfaceNumber() != null)
 											&& currLevel1Binding.getFromInterfaceNumber().equals(currLevel2ThisBinding.getToInterfaceNumber()))
 										|| (currLevel1Binding.getFromInterfaceNumber() == null && currLevel2ThisBinding.getToInterfaceNumber() == null))) {
+								
+								/* 
+								 * we do not wish to modify the level 2 definition (since another composite may use it),
+								 * in our source-driven approach
+								 */
+								Binding newLevel1Binding = ASTHelper.newBinding(nodeFactoryItf);
+								
 								/* 
 								 * Calculate the new name of the "leveled-up" target component and set it as new binding
 								 * target, modify the level 2 bindings since bindings are SOURCE-DRIVEN.
 								 */
-								currLevel2ThisBinding.setFromComponent(currLevel1InstanceName + "_" + currLevel2ThisBinding.getFromComponent());
+								newLevel1Binding.setFromComponent(currLevel1InstanceName + "_" + currLevel2ThisBinding.getFromComponent());
 								// destination in level 1 (no renaming)
-								currLevel2ThisBinding.setToComponent(currLevel1Binding.getToComponent());
+								newLevel1Binding.setToComponent(currLevel1Binding.getToComponent());
 								// inner bindings source and destination may be different
-								currLevel2ThisBinding.setToInterface(currLevel1Binding.getToInterface());
+								newLevel1Binding.setToInterface(currLevel1Binding.getToInterface());
 								// handle collections
-								currLevel2ThisBinding.setToInterfaceNumber(currLevel1Binding.getToInterfaceNumber());
+								newLevel1Binding.setToInterfaceNumber(currLevel1Binding.getToInterfaceNumber());
+								
+								// duplicate the other currLevel2ThisBinding info
+								newLevel1Binding.setFromInterface(currLevel2ThisBinding.getFromInterface());
+								newLevel1Binding.setFromInterfaceNumber(currLevel2ThisBinding.getFromInterfaceNumber());
 								
 								// binding level-up ! (source-driven)
 								
 								// remove level 1 binding
 								level0DefAsBindingContainer.removeBinding(currLevel1Binding);
 								// add the new one
-								level0DefAsBindingContainer.addBinding(currLevel2ThisBinding);
+								level0DefAsBindingContainer.addBinding(newLevel1Binding);
 							}
 						}
 					}
@@ -358,31 +376,6 @@ AbstractADLLoaderAnnotationProcessor {
 
 		componentsToUpperComposite.addAll(Arrays.asList(level0DefAsComponentContainer.getComponents()));
 		bindingsToUpperComposite.addAll(Arrays.asList(level0DefAsBindingContainer.getBindings()));
-	}
-
-	/**
-	 * For all components in the list, filter the composite ones and return them.
-	 * @param componentsList
-	 * @return The list of all composite sub-components.
-	 */
-	private void discriminateComponents(List<Component> componentsList, List<Component> primitiveComponentsList, List<Component> compositeComponentsList) {
-
-		Definition subCompDef;
-
-		for (Component subComponent : componentsList) {
-			try {
-				subCompDef = resolveComponentDefinition(subComponent);
-			} catch (ADLException e) {
-				// just don't add to the list
-				logger.warning("Error while handling component " + subComponent.getName() + ", couldn't resolve its definition - skip");
-				continue;
-			}
-			if (ASTHelper.isComposite(subCompDef))
-				compositeComponentsList.add(subComponent);
-			if (ASTHelper.isPrimitive(subCompDef))
-				primitiveComponentsList.add(subComponent);
-		}
-
 	}
 
 	private Definition resolveComponentDefinition(Component component) throws ADLException {
