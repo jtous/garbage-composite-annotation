@@ -35,6 +35,7 @@ import org.objectweb.fractal.adl.Definition;
 import org.objectweb.fractal.adl.Loader;
 import org.objectweb.fractal.adl.Node;
 import org.objectweb.fractal.adl.NodeFactory;
+import org.objectweb.fractal.adl.merger.MergeException;
 import org.objectweb.fractal.adl.merger.NodeMerger;
 import org.objectweb.fractal.adl.util.FractalADLLogManager;
 import org.ow2.mind.adl.annotation.ADLLoaderPhase;
@@ -47,6 +48,7 @@ import org.ow2.mind.adl.ast.ComponentContainer;
 import org.ow2.mind.adl.ast.DefinitionReference;
 import org.ow2.mind.adl.parameter.ast.Argument;
 import org.ow2.mind.annotation.Annotation;
+import org.ow2.mind.annotation.AnnotationHelper.AnnotationDecoration;
 import org.ow2.mind.error.ErrorManager;
 import org.ow2.mind.value.ast.Reference;
 import org.ow2.mind.value.ast.Value;
@@ -332,6 +334,9 @@ AbstractADLLoaderAnnotationProcessor {
 								newLevel1Binding.setFromInterface(currLevel2ThisBinding.getFromInterface());
 								newLevel1Binding.setFromInterfaceNumber(currLevel2ThisBinding.getFromInterfaceNumber());
 								
+								// transfer level 1 annotation to the new level 1 bindings
+								applyAnnotations(currLevel1Binding, newLevel1Binding);
+								
 								// binding level-up ! (source-driven)
 								
 								// remove level 1 binding
@@ -406,6 +411,41 @@ AbstractADLLoaderAnnotationProcessor {
 			if (!isSrcThis && !isTgtThis)
 				basicBindingsList.add(binding);
 		}
+
+	}
+	
+	/**
+	 * Merging annotations from the extension node and the target definition node.
+	 * In the case of duplicates, the merge strategy is to override with the extension annotation.
+	 * 
+	 * @param The extension node from which to get annotations from.
+	 * @param The definition node to apply annotations to.
+	 * @throws ADLException 
+	 */
+	private void applyAnnotations(Node source, Node destination) {
+
+		// Let's merge the annotations, taking shorcuts inspired from AnnotationHelper !
+
+		AnnotationDecoration extDecoration = (AnnotationDecoration) source.astGetDecoration("annotations");
+		if (extDecoration == null)
+			return;
+
+		AnnotationDecoration nDecoration = (AnnotationDecoration) destination.astGetDecoration("annotations");
+		if (nDecoration == null) {
+			nDecoration = new AnnotationDecoration();
+		}
+
+		AnnotationDecoration mergeResultDecoration = null;
+
+		try {
+			mergeResultDecoration = (AnnotationDecoration) nDecoration.mergeDecoration(extDecoration);
+		} catch (MergeException e) {
+			// This exception will never happen since there is not a single branch of code where it is thrown !
+			e.printStackTrace();
+		}
+
+		if (mergeResultDecoration != null)
+			destination.astSetDecoration("annotations", mergeResultDecoration);
 
 	}
 
