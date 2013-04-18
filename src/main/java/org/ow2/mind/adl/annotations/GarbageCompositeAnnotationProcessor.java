@@ -418,6 +418,8 @@ AbstractADLLoaderAnnotationProcessor {
 	 * Merging annotations from the extension node and the target definition node.
 	 * In the case of duplicates, the merge strategy is to override with the extension annotation.
 	 * 
+	 * TODO: duplicate nodes ? is it really needed ?
+	 * 
 	 * @param The extension node from which to get annotations from.
 	 * @param The definition node to apply annotations to.
 	 * @throws ADLException 
