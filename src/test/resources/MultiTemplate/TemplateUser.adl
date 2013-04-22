@@ -1,0 +1,11 @@
+@GarbageComposite
+composite TemplateUser {
+	
+	contains ClientPrimitive as cltComp;
+	contains Template<SimplePrimitive1(8)> as template1;
+	contains Template<SimplePrimitive2(-8)> as template2;
+	
+	binds cltComp.client1 to template1.srv;
+	binds cltComp.client2 to template2.srv;
+	
+}

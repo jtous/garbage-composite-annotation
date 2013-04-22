@@ -161,8 +161,8 @@ AbstractADLLoaderAnnotationProcessor {
 
 		// new data containers: their reference will be provided to the "flatten" method to be filled at each
 		// level of the recursion
-		List<Component>	retLevel2Components	= new ArrayList<Component>();
-		List<Binding> 	retLevel2Bindings 	= new ArrayList<Binding>();
+		List<Component>	retLevel2Components	= null;
+		List<Binding> 	retLevel2Bindings 	= null;
 
 		// new data containers
 		List<Binding> 	level2SrcThisBindingsList		= null;
@@ -174,7 +174,10 @@ AbstractADLLoaderAnnotationProcessor {
 		for (Component currLevel1Instance : level1ComponentsList) {
 
 			currLevel1InstanceName = currLevel1Instance.getName();
-
+			
+			retLevel2Components	= new ArrayList<Component>();
+			retLevel2Bindings 	= new ArrayList<Binding>();
+			
 			//--------------------
 			// Preparing elements
 			//--------------------

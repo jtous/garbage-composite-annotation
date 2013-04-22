@@ -191,8 +191,6 @@ public class TestGarbageComposite extends AbstractFunctionalTest {
 		runner.compileRunAndCheck("MultiInternalClientBinding3", null);
 	}
 	
-	// SSZ: testing originally non activated test cases
-	
 	@Test(groups = {"checkin"})
 	public void multiInternalServerBinding1() throws Exception {
 		cleanBuildDir();
@@ -205,6 +203,13 @@ public class TestGarbageComposite extends AbstractFunctionalTest {
 		cleanBuildDir();
 		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"MultiInternalServerBinding");
 		runner.compileRunAndCheck("MultiInternalServerBinding2", null);
+	}
+	
+	@Test(groups = {"checkin"})
+	public void multiTemplate() throws Exception {
+		cleanBuildDir();
+		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"MultiTemplate");
+		runner.compileRunAndCheck("TemplateUser", null);
 	}
 
 }
