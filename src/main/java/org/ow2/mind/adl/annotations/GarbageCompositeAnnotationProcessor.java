@@ -413,6 +413,10 @@ AbstractADLLoaderAnnotationProcessor {
 			}
 			if (!isSrcThis && !isTgtThis)
 				basicBindingsList.add(binding);
+			
+			// cleanup at each iteration for each next binding
+			isSrcThis = false;
+			isTgtThis = false;
 		}
 
 	}

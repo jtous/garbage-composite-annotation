@@ -1,0 +1,3 @@
+interface GetValue {
+	int run(void);
+}

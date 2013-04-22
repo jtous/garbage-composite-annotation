@@ -1,5 +1,5 @@
 @GarbageComposite
-composite TemplateUser {
+composite TemplateUser1 {
 	
 	contains ClientPrimitive as cltComp;
 	contains Template<SimplePrimitive1(8)> as template1;

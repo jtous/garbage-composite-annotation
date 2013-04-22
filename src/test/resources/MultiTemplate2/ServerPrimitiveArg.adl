@@ -1,0 +1,20 @@
+@Singleton
+primitive ServerPrimitiveArg(param1, param2) {
+	provides GetValue as srv1;
+	provides GetValue as srv2;
+	
+	attribute int attr1 = param1;
+	attribute int attr2 = param2;
+	source {{
+		int METH(srv1, run)(void)
+		{
+			//attr1 has been set to 8
+			return ATTR(attr1);
+		}
+		int METH(srv2, run)(void)
+		{
+			//attr1 has been set to -8
+			return ATTR(attr2);
+		}
+	}};
+}
