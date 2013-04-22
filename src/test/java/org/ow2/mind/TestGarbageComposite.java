@@ -225,5 +225,19 @@ public class TestGarbageComposite extends AbstractFunctionalTest {
 		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"MultiTemplate2");
 		runner.compileRunAndCheck("TemplateUser2", null);
 	}
+	
+	@Test(groups = {"checkin"})
+	public void multiTemplate3() throws Exception {
+		cleanBuildDir();
+		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"MultiTemplate2");
+		runner.compileRunAndCheck("TemplateUser3", null);
+	}
+	
+	@Test(groups = {"checkin"})
+	public void multiTemplate4() throws Exception {
+		cleanBuildDir();
+		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"MultiTemplate2");
+		runner.compileRunAndCheck("TemplateUser4", null);
+	}
 
 }

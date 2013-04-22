@@ -151,9 +151,11 @@ AbstractADLLoaderAnnotationProcessor {
 		ComponentContainer 	level0DefAsComponentContainer 	= ((ComponentContainer) level0Definition);
 		BindingContainer 	level0DefAsBindingContainer 	= ((BindingContainer) level0Definition);
 
-		// non-modifiable initial lists
+		// non-modifiable initial list
 		final List<Component> 	level1ComponentsList 	= Arrays.asList(level0DefAsComponentContainer.getComponents());
-		final List<Binding> 	level1BindingsList 		= Arrays.asList(level0DefAsBindingContainer.getBindings());
+		
+		// this list will be modified on the fly
+		List<Binding> 	level1BindingsList 	= null;
 
 		// iteration utility
 		List<Argument> 	currLevel1CompDefArguments 		= null;
@@ -174,6 +176,9 @@ AbstractADLLoaderAnnotationProcessor {
 		for (Component currLevel1Instance : level1ComponentsList) {
 
 			currLevel1InstanceName = currLevel1Instance.getName();
+			
+			// refresh the binding list in case the previous iteration/recursion led to bindings creation/removal
+			level1BindingsList 	= Arrays.asList(level0DefAsBindingContainer.getBindings());
 			
 			retLevel2Components	= new ArrayList<Component>();
 			retLevel2Bindings 	= new ArrayList<Binding>();
