@@ -104,6 +104,10 @@ AbstractADLLoaderAnnotationProcessor {
 		if (ASTHelper.isComposite(definition))
 			runFlatten(definition);
 		
+		ADLDumper dumper = null;
+		if (((GarbageComposite) annotation).dumpADL)
+			dumper = new ADLDumper(definition, context, ((GarbageComposite) annotation).dumpAnnotations);
+		
 		return null;
 	}
 

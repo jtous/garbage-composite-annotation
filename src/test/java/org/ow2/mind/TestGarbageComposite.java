@@ -239,5 +239,27 @@ public class TestGarbageComposite extends AbstractFunctionalTest {
 		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"MultiTemplate2");
 		runner.compileRunAndCheck("TemplateUser4", null);
 	}
+	
+	/**
+	 * Test flattening anonymous components (with inlined content)
+	 * @throws Exception
+	 */
+	@Test(groups = {"checkin"})
+	public void anonymous1() throws Exception {
+		cleanBuildDir();
+		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"Anonymous");
+		runner.compileRunAndCheck("Anonymous1", null);
+	}
+	
+	/**
+	 * Test flattening anonymous components (simple refining with inheritance)
+	 * @throws Exception
+	 */
+	@Test(groups = {"checkin"})
+	public void anonymous2() throws Exception {
+		cleanBuildDir();
+		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"Anonymous");
+		runner.compileRunAndCheck("Anonymous2", null);
+	}
 
 }
