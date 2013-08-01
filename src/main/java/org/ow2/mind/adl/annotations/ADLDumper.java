@@ -195,7 +195,7 @@ public class ADLDumper {
 				try {
 					Definition subCompDef = ASTHelper.getResolvedComponentDefinition(subComponents[i], null, context);
 					
-					
+					/*
 					if (subComponents[i] instanceof AnonymousDefinitionContainer) {
 						outputFileBufferedWriter.write(tab + "contains as " + subComponents[i].getName());
 						outputFileBufferedWriter.newLine();
@@ -213,11 +213,11 @@ public class ADLDumper {
 						// TODO: serialize primitive component body
 						
 						outputFileBufferedWriter.newLine();
-						outputFileBufferedWriter.write(tab + "}");
-					} else {
+						outputFileBufferedWriter.write(tab + "};");
+					} else { */
 						writeAnnotations(subComponents[i], true);
 						outputFileBufferedWriter.write(tab + "contains " + subCompDef.getName() + " as " + subComponents[i].getName() + semicolon);
-					}
+					/*}*/
 				} catch (ADLException e) {
 					logger.warning("Could not serialize sub-component " + subComponents[i].getName() + " since its definition could not be resolved.");
 					continue;
