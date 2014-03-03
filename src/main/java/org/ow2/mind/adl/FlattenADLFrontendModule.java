@@ -1,11 +1,11 @@
 package org.ow2.mind.adl;
 
 import org.objectweb.fractal.adl.Loader;
-import org.ow2.mind.adl.ADLFrontendModule;
 import org.ow2.mind.inject.AbstractMindModule;
 
 import com.google.inject.Key;
 import com.google.inject.name.Names;
+import com.google.inject.util.Modules;
 
 /**
  * Configure the ADL-Frontend Guice module.
