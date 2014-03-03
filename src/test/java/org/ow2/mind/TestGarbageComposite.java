@@ -28,7 +28,7 @@ import java.io.File;
 
 import org.testng.annotations.Test;
 
-public class TestGarbageComposite extends AbstractFunctionalTest {
+public class TestGarbageComposite extends AbstractGarbageCompositeTest {
 
 	protected static File         buildDir = new File("target/build/");
 	
