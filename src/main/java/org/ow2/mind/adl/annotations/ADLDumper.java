@@ -59,7 +59,7 @@ public class ADLDumper {
 	private File outputFile = null;
 	private FileWriter outputFileWriter = null;
 	private BufferedWriter outputFileBufferedWriter = null; 
-	
+
 	private boolean dumpAnnotations = false;
 
 	/**
@@ -82,7 +82,7 @@ public class ADLDumper {
 	public ADLDumper(final Definition rootDefinition, Map<Object, Object> context, boolean dumpAnnotations) {
 
 		this.dumpAnnotations = dumpAnnotations;
-		
+
 		// special for test cases (since @Inject seems to be capricious)
 		if (outputFileLocatorItf == null)
 			outputFileLocatorItf = new BasicOutputFileLocator();
@@ -127,21 +127,24 @@ public class ADLDumper {
 	public void writeHeader(Definition rootDefinition) throws IOException {
 		outputFileBufferedWriter.write("/**");
 		outputFileBufferedWriter.newLine();
-		
+
 		outputFileBufferedWriter.write(" * Generated file.");
 		outputFileBufferedWriter.newLine();
-		outputFileBufferedWriter.write(" * Warning: annotations are serialized here without their arguments (if any),");
-		outputFileBufferedWriter.newLine();
-		outputFileBufferedWriter.write(" * except for @GarbageComposite that we skip.");
-		outputFileBufferedWriter.newLine();
+
+		if (this.dumpAnnotations) { 
+			outputFileBufferedWriter.write(" * Warning: annotations are serialized here without their arguments (if any),");
+			outputFileBufferedWriter.newLine();
+			outputFileBufferedWriter.write(" * except for @GarbageComposite that we skip.");
+			outputFileBufferedWriter.newLine();
+		}
 		
-		outputFileBufferedWriter.write("*/");
+		outputFileBufferedWriter.write(" */");
 		outputFileBufferedWriter.newLine();
-		
+
 		outputFileBufferedWriter.newLine();
-		
+
 		writeAnnotations(rootDefinition, false);
-		
+
 		outputFileBufferedWriter.write("composite " + rootDefinition.getName() + "_flat" + " {");
 		outputFileBufferedWriter.newLine();
 	}
@@ -164,12 +167,12 @@ public class ADLDumper {
 
 			for (int i = 0; i < interfaces.length; i++) {
 				final MindInterface itf = (MindInterface) interfaces[i];
-				
+
 				writeAnnotations(itf, true);
-				
+
 				outputFileBufferedWriter.write(tab
 						+ (itf.getRole() ==  TypeInterface.SERVER_ROLE ? "provides " : "requires ")
-						+ itf.getSignature()
+						+ itf.getSignature() + " "
 						+ (itf.getContingency() != null ? itf.getContingency() : "")
 						+ "as " + itf.getName());
 				if (itf.getNumberOfElement() != null) {
@@ -186,7 +189,7 @@ public class ADLDumper {
 				.getComponents();
 
 		// TODO: Handle anonymous components writing
-		
+
 		if (subComponents != null) {
 			outputFileBufferedWriter.write(tab + "// "+ subComponents.length + " Subcomponent(s)");
 			outputFileBufferedWriter.newLine();
@@ -194,29 +197,29 @@ public class ADLDumper {
 			for (int i = 0; i < subComponents.length; i++) {
 				try {
 					Definition subCompDef = ASTHelper.getResolvedComponentDefinition(subComponents[i], null, context);
-					
+
 					/*
 					if (subComponents[i] instanceof AnonymousDefinitionContainer) {
 						outputFileBufferedWriter.write(tab + "contains as " + subComponents[i].getName());
 						outputFileBufferedWriter.newLine();
 						writeAnnotations(subComponents[i], true);
-						
+
 						assert ASTHelper.isPrimitive(subCompDef); // should be since all the GarbageComposite handling has been done
 						if (ASTHelper.isComposite(subCompDef)) {
 							logger.warning("Anonymous sub-component " + subComponents[i] + " should have been handled by garbage composite !! Skip !");
 							continue;
 						}
-						
+
 						outputFileBufferedWriter.write(tab + "primitive {");
 						outputFileBufferedWriter.newLine();
-						
+
 						// TODO: serialize primitive component body
-						
+
 						outputFileBufferedWriter.newLine();
 						outputFileBufferedWriter.write(tab + "};");
 					} else { */
-						writeAnnotations(subComponents[i], true);
-						outputFileBufferedWriter.write(tab + "contains " + subCompDef.getName() + " as " + subComponents[i].getName() + semicolon);
+					writeAnnotations(subComponents[i], true);
+					outputFileBufferedWriter.write(tab + "contains " + subCompDef.getName() + " as " + subComponents[i].getName() + semicolon);
 					/*}*/
 				} catch (ADLException e) {
 					logger.warning("Could not serialize sub-component " + subComponents[i].getName() + " since its definition could not be resolved.");
@@ -240,9 +243,9 @@ public class ADLDumper {
 
 			for (int i = 0; i < bindings.length; i++) {
 				final Binding binding = bindings[i];
-				
+
 				writeAnnotations(binding, true);
-				
+
 				outputFileBufferedWriter.write(tab + "binds " + binding.getFromComponent() + "." + binding.getFromInterface());
 				if (binding.getFromInterfaceNumber() != null) {
 					outputFileBufferedWriter.write("[" + binding.getFromInterfaceNumber() + "]");
@@ -256,7 +259,7 @@ public class ADLDumper {
 			}
 		}
 	}
-	
+
 	/**
 	 * Serialize all annotations except GarbageComposite (since we already flattened...)
 	 * This methods handles the annotation name from introspection, but we do NOT serialize
@@ -265,24 +268,24 @@ public class ADLDumper {
 	 * @throws IOException 
 	 */
 	private void writeAnnotations(Node container, boolean inBody) throws IOException {
-		
+
 		if (!dumpAnnotations) return;
-		
+
 		// serialize annotations
 		Annotation[] arrayOfAnnotations = AnnotationHelper.getAnnotations(container);
-		
+
 		if (arrayOfAnnotations == null)
 			return;
-		
+
 		for (Annotation currAnno : arrayOfAnnotations) {
 			if (currAnno instanceof GarbageComposite)
 				continue;
-			
+
 			String line = "";
 			if (inBody)
 				line = line + tab;
 			line = line + "@" + currAnno.getClass().getSimpleName();
-			
+
 			outputFileBufferedWriter.write(line);
 			outputFileBufferedWriter.newLine();
 		}

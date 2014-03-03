@@ -110,11 +110,11 @@ AbstractADLLoaderAnnotationProcessor {
 		
 		return null;
 	}
-
+	
 	/**
 	 * Init the flatten recursion.
 	 */
-	private void runFlatten(Definition definition) {
+	public void runFlatten(Definition definition) {
 
 		// new data containers: their reference will be provided to the "flatten" method to be
 		// filled at each level of the recursion
