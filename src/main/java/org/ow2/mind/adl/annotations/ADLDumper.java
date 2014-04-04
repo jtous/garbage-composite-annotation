@@ -31,6 +31,7 @@ import java.util.logging.Logger;
 
 import org.objectweb.fractal.adl.ADLException;
 import org.objectweb.fractal.adl.Definition;
+import org.objectweb.fractal.adl.Loader;
 import org.objectweb.fractal.adl.Node;
 import org.objectweb.fractal.adl.interfaces.Interface;
 import org.objectweb.fractal.adl.interfaces.InterfaceContainer;
@@ -68,44 +69,36 @@ public class ADLDumper {
 	private static Logger logger = FractalADLLogManager.getLogger("ADLDumper");
 
 	@Inject
+    protected Loader        loaderItf;
+	
+	@Inject
 	protected OutputFileLocator outputFileLocatorItf;
 
 	private String tab = "\t";
 	private String semicolon = ";";
 
-	/**
-	 * Constructor does init then does the job.
-	 * @param rootDefinition
-	 * @param dumpAnnotations 
-	 * @param filePath
-	 */
-	public ADLDumper(final Definition rootDefinition, Map<Object, Object> context, boolean dumpAnnotations) {
-
+	public void dump(final Definition rootDefinition, Map<Object, Object> context, boolean dumpAnnotations) {
+		
 		this.dumpAnnotations = dumpAnnotations;
-
-		// special for test cases (since @Inject seems to be capricious)
-		if (outputFileLocatorItf == null)
-			outputFileLocatorItf = new BasicOutputFileLocator();
-		//
-
+		
 		// short name (no package) + _flat suffix
-		String filePath = rootDefinition.getName().substring(rootDefinition.getName().lastIndexOf(".") + 1) + "_flat.adl";
+        String filePath = rootDefinition.getName().substring(rootDefinition.getName().lastIndexOf(".") + 1) + "_flat.adl";
 
-		try {
-			initFile(filePath, context);
-			writeHeader(rootDefinition);
+        try {
+            initFile(filePath, context);
+            writeHeader(rootDefinition);
 
-			run(rootDefinition, context);
+            run(rootDefinition, context);
 
-			writeFooter();
-			flushBufferCloseFile();
+            writeFooter();
+            flushBufferCloseFile();
 
-		} catch (IOException e) {
-			logger.warning("Could not dump flattened " + rootDefinition.getName() + " ADL to file - File creation/writing error !");
-			return;
-		}
+        } catch (IOException e) {
+            logger.warning("Could not dump flattened " + rootDefinition.getName() + " ADL to file - File creation/writing error !");
+            return;
+        }
 	}
-
+	
 	private void flushBufferCloseFile() throws IOException {
 		outputFileBufferedWriter.close();
 	}
@@ -196,7 +189,7 @@ public class ADLDumper {
 
 			for (int i = 0; i < subComponents.length; i++) {
 				try {
-					Definition subCompDef = ASTHelper.getResolvedComponentDefinition(subComponents[i], null, context);
+					Definition subCompDef = ASTHelper.getResolvedComponentDefinition(subComponents[i], loaderItf, context);
 
 					/*
 					if (subComponents[i] instanceof AnonymousDefinitionContainer) {

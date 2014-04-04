@@ -34,11 +34,11 @@ public class FlattenLoader extends AbstractDelegatingLoader {
 		// Ask Guice for an instance, for the fields to be injected (won't work otherwise)
 		GarbageCompositeAnnotationProcessor processor = injector.getInstance(GarbageCompositeAnnotationProcessor.class);
 		
-		processor.runFlatten(d);
+		processor.runFlatten(d, context);
 		
 		// Debug: enable following lines to dump the flattened architecture
-		@SuppressWarnings("unused") // all the processing is done from the constructor
-		ADLDumper dumper = new ADLDumper(d, context, false /* Do not try to keep annotations during the merge serialization */ );
+		ADLDumper dumper = injector.getInstance(ADLDumper.class);
+		dumper.dump(d, context, false /* Do not try to keep annotations during the merge serialization */);
 		
 		// Return the resulting tree
 		return d;

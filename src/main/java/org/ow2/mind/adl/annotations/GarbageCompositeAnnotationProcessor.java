@@ -54,6 +54,7 @@ import org.ow2.mind.value.ast.Reference;
 import org.ow2.mind.value.ast.Value;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 
 /**
  * @author Julien TOUS
@@ -62,6 +63,9 @@ import com.google.inject.Inject;
 public class GarbageCompositeAnnotationProcessor extends
 AbstractADLLoaderAnnotationProcessor {
 
+	@Inject
+	Injector injector;
+	
 	@Inject
 	protected NodeFactory 	nodeFactoryItf;
 
@@ -74,8 +78,6 @@ AbstractADLLoaderAnnotationProcessor {
 	@Inject
 	protected ErrorManager   errorManager;
 
-
-	private Map<Object, Object> context;
 	private ADLLoaderPhase phase;
 
 	/**
@@ -99,22 +101,23 @@ AbstractADLLoaderAnnotationProcessor {
 		assert annotation instanceof GarbageComposite;
 
 		this.phase = phase;
-		this.context = context;
 		
 		if (ASTHelper.isComposite(definition))
-			runFlatten(definition);
+			runFlatten(definition, context);
 		
 		ADLDumper dumper = null;
-		if (((GarbageComposite) annotation).dumpADL)
-			dumper = new ADLDumper(definition, context, ((GarbageComposite) annotation).dumpAnnotations);
-		
+		if (((GarbageComposite) annotation).dumpADL) {
+			dumper = injector.getInstance(ADLDumper.class);
+			dumper.dump(definition, context, ((GarbageComposite) annotation).dumpAnnotations);
+		}
+			
 		return null;
 	}
 	
 	/**
 	 * Init the flatten recursion.
 	 */
-	public void runFlatten(Definition definition) {
+	public void runFlatten(Definition definition, Map<Object, Object> context) {
 
 		// new data containers: their reference will be provided to the "flatten" method to be
 		// filled at each level of the recursion
@@ -122,7 +125,7 @@ AbstractADLLoaderAnnotationProcessor {
 		List<Binding> retBindings 		= new ArrayList<Binding>();
 
 		// go recursive
-		flatten(definition, retComponents, retBindings);
+		flatten(definition, retComponents, retBindings, context);
 
 		// in the end we obtain huge lists of components and everything as already been propagated
 		// so we can free those lists
@@ -145,7 +148,8 @@ AbstractADLLoaderAnnotationProcessor {
 	 */
 	private void flatten(Definition level0Definition,
 			List<Component> componentsToUpperComposite,
-			List<Binding> bindingsToUpperComposite) {
+			List<Binding> bindingsToUpperComposite,
+			Map<Object, Object> context) {
 
 		Definition currLevel1CompDef = null;
 
@@ -192,7 +196,7 @@ AbstractADLLoaderAnnotationProcessor {
 			//--------------------
 
 			try {
-				currLevel1CompDef = resolveComponentDefinition(currLevel1Instance);
+				currLevel1CompDef = resolveComponentDefinition(currLevel1Instance, context);
 			} catch (ADLException e) {
 				// just don't add to the list
 				logger.warning("couldn't resolve " + currLevel1Instance.getName() + " definition - skip");
@@ -224,7 +228,7 @@ AbstractADLLoaderAnnotationProcessor {
 				// Recursion
 				//-----------
 
-				flatten(currLevel1CompDef, retLevel2Components, retLevel2Bindings);
+				flatten(currLevel1CompDef, retLevel2Components, retLevel2Bindings, context);
 
 				//------------------------
 				// Components: Level Up !
@@ -236,7 +240,7 @@ AbstractADLLoaderAnnotationProcessor {
 					Definition currLevel2CompDef = null;
 
 					try {
-						currLevel2CompDef = resolveComponentDefinition(currLevel2Comp);
+						currLevel2CompDef = resolveComponentDefinition(currLevel2Comp, context);
 					} catch (ADLException e) {
 						// just don't add to the list
 						logger.warning("couldn't resolve " + currLevel1Instance.getName() + " definition - skip");
@@ -395,11 +399,11 @@ AbstractADLLoaderAnnotationProcessor {
 		bindingsToUpperComposite.addAll(Arrays.asList(level0DefAsBindingContainer.getBindings()));
 	}
 
-	private Definition resolveComponentDefinition(Component component) throws ADLException {
+	private Definition resolveComponentDefinition(Component component, Map<Object, Object> context) throws ADLException {
 		DefinitionReference	currCompDefRef = component.getDefinitionReference();
 		if (currCompDefRef == null)
 			return null;
-		return ASTHelper.getResolvedDefinition(currCompDefRef, loaderItf, this.context);
+		return ASTHelper.getResolvedDefinition(currCompDefRef, loaderItf, context);
 	}
 
 	/**
