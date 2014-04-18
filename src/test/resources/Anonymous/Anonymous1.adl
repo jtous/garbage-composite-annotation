@@ -1,4 +1,4 @@
-@GarbageComposite(dumpADL=true, dumpAnnotations=true)
+@Flatten(dumpADL=true, dumpAnnotations=true)
 @Singleton
 composite Anonymous1 {
 	

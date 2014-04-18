@@ -1,4 +1,4 @@
-@GarbageComposite
+@Flatten
 @Singleton
 composite MultiInternalClientBinding1 {
 	contains ClientPrimitive as clt;

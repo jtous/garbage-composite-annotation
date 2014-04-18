@@ -1,4 +1,4 @@
-@GarbageComposite
+@Flatten
 composite TemplateUser1 {
 	
 	contains ClientPrimitive as cltComp;

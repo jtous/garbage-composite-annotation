@@ -1,4 +1,4 @@
-//@GarbageComposite
+//@Flatten
 composite Template<ParamComp conformsto GetValueType> extends GetValueType {
 	contains ParamComp as comp;
 	binds this.srv to comp.srv;

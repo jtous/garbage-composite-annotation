@@ -82,7 +82,7 @@ public class ADLDumper {
 		this.dumpAnnotations = dumpAnnotations;
 		
 		// short name (no package) + _flat suffix
-        String filePath = rootDefinition.getName().substring(rootDefinition.getName().lastIndexOf(".") + 1) + "_flat.adl";
+        String filePath = rootDefinition.getName().replace('.', '/') + "_flat.adl";
 
         try {
             initFile(filePath, context);
@@ -127,7 +127,7 @@ public class ADLDumper {
 		if (this.dumpAnnotations) { 
 			outputFileBufferedWriter.write(" * Warning: annotations are serialized here without their arguments (if any),");
 			outputFileBufferedWriter.newLine();
-			outputFileBufferedWriter.write(" * except for @GarbageComposite that we skip.");
+			outputFileBufferedWriter.write(" * except for @Flatten that we skip.");
 			outputFileBufferedWriter.newLine();
 		}
 		
@@ -271,7 +271,7 @@ public class ADLDumper {
 			return;
 
 		for (Annotation currAnno : arrayOfAnnotations) {
-			if (currAnno instanceof GarbageComposite)
+			if (currAnno instanceof GarbageComposite || currAnno instanceof Flatten)
 				continue;
 
 			String line = "";

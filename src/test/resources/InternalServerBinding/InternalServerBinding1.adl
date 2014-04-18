@@ -1,4 +1,4 @@
-@GarbageComposite
+@Flatten
 @Singleton
 composite InternalServerBinding1 {
 	contains ServerPrimitive as srv;

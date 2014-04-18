@@ -66,7 +66,7 @@ public class GarbageComposite implements Annotation {
     }
     
     public String toString() {
-    	return "@GarbageComposite";
+    	return "@Flatten";
     }
 
 }

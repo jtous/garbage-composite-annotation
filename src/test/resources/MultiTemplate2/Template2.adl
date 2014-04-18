@@ -1,4 +1,4 @@
-//@GarbageComposite
+//@Flatten
 composite Template2<ParamDef1 conformsto RelayType, ParamDef2 conformsto RelayType> extends RelayType {
 	contains ParamDef1 as comp1;
 	contains ParamDef2 as comp2;

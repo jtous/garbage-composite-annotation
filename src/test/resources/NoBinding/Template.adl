@@ -1,4 +1,4 @@
-@GarbageComposite
+@Flatten
 composite Template<ParamComp conformsto AnyComponentType> {
 	contains ParamComp as comp;
 }

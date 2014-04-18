@@ -1,4 +1,4 @@
-@GarbageComposite
+@Flatten
 composite NoBinding2 {
 	contains Comp2(8) as comp2;
 }

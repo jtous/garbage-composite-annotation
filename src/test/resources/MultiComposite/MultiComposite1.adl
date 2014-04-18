@@ -1,4 +1,4 @@
-@GarbageComposite
+@Flatten
 @Singleton
 composite MultiComposite1 {
 	contains ClientPrimitive as clt;

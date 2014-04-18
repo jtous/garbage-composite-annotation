@@ -65,7 +65,7 @@ AbstractADLLoaderAnnotationProcessor {
 
 	@Inject
 	Injector injector;
-	
+
 	@Inject
 	protected NodeFactory 	nodeFactoryItf;
 
@@ -98,22 +98,27 @@ AbstractADLLoaderAnnotationProcessor {
 			final Node node, final Definition definition,
 			final ADLLoaderPhase phase, final Map<Object, Object> context)
 					throws ADLException {
-		assert annotation instanceof GarbageComposite;
 
-		this.phase = phase;
+		assert (annotation instanceof GarbageComposite || annotation instanceof Flatten);
 		
+		this.phase = phase;
+
 		if (ASTHelper.isComposite(definition))
 			runFlatten(definition, context);
-		
+
 		ADLDumper dumper = null;
-		if (((GarbageComposite) annotation).dumpADL) {
+
+		if (annotation instanceof GarbageComposite && (((GarbageComposite) annotation).dumpADL)) {
 			dumper = injector.getInstance(ADLDumper.class);
 			dumper.dump(definition, context, ((GarbageComposite) annotation).dumpAnnotations);
+		} else if (annotation instanceof Flatten && (((Flatten) annotation).dumpADL)) {
+			dumper = injector.getInstance(ADLDumper.class);
+			dumper.dump(definition, context, ((Flatten) annotation).dumpAnnotations);
 		}
-			
+
 		return null;
 	}
-	
+
 	/**
 	 * Init the flatten recursion.
 	 */
@@ -161,7 +166,7 @@ AbstractADLLoaderAnnotationProcessor {
 
 		// non-modifiable initial list
 		final List<Component> 	level1ComponentsList 	= Arrays.asList(level0DefAsComponentContainer.getComponents());
-		
+
 		// this list will be modified on the fly
 		List<Binding> 	level1BindingsList 	= null;
 
@@ -184,13 +189,13 @@ AbstractADLLoaderAnnotationProcessor {
 		for (Component currLevel1Instance : level1ComponentsList) {
 
 			currLevel1InstanceName = currLevel1Instance.getName();
-			
+
 			// refresh the binding list in case the previous iteration/recursion led to bindings creation/removal
 			level1BindingsList 	= Arrays.asList(level0DefAsBindingContainer.getBindings());
-			
+
 			retLevel2Components	= new ArrayList<Component>();
 			retLevel2Bindings 	= new ArrayList<Binding>();
-			
+
 			//--------------------
 			// Preparing elements
 			//--------------------
@@ -214,7 +219,7 @@ AbstractADLLoaderAnnotationProcessor {
 				else if (phase == ADLLoaderPhase.AFTER_TEMPLATE_INSTANTIATE)
 					// inspired from ParametricDefinitionReferenceResolver.java: 123
 					logger.warning("couldn't resolve " + currLevel1Instance.getName() + " definition in After Template Instantiate phase, abnormal situation - skip (but flattening result may be hazardous !)");
-				
+
 				// in any case... do nothing and go to the next level 1 component
 				continue;
 			}
@@ -298,7 +303,7 @@ AbstractADLLoaderAnnotationProcessor {
 									// check compatibility of collection number information
 									&& ((currLevel1Binding.getToInterfaceNumber() != null && currLevel2ThisBinding.getFromInterfaceNumber() != null)
 											&& (currLevel1Binding.getToInterfaceNumber().equals(currLevel2ThisBinding.getFromInterfaceNumber()))
-										|| (currLevel1Binding.getToInterfaceNumber() == null && currLevel2ThisBinding.getFromInterfaceNumber() == null))) {
+											|| (currLevel1Binding.getToInterfaceNumber() == null && currLevel2ThisBinding.getFromInterfaceNumber() == null))) {
 								/* 
 								 * Calculate the new name of the "leveled-up" target component and set it as new binding
 								 * target, modify the level 1 bindings since bindings are SOURCE-DRIVEN.
@@ -308,13 +313,13 @@ AbstractADLLoaderAnnotationProcessor {
 								currLevel1Binding.setToInterface(currLevel2ThisBinding.getToInterface());
 								// handle collections
 								currLevel1Binding.setToInterfaceNumber(currLevel2ThisBinding.getToInterfaceNumber());
-								
+
 								/*
 								 *  no other info update since we really modify the composite definition (even if the composite
 								 *  is used in other places in the architecture, the sub-modifications would be identical, so we allow
 								 *  such modification). TODO: check if this is true according to templates ?
 								 */
-								
+
 								// no binding level-up since we modify existing ones (source-driven)
 							}
 						}
@@ -326,14 +331,14 @@ AbstractADLLoaderAnnotationProcessor {
 									// check compatibility of collection number information
 									&& (((currLevel1Binding.getFromInterfaceNumber() != null && currLevel2ThisBinding.getToInterfaceNumber() != null)
 											&& currLevel1Binding.getFromInterfaceNumber().equals(currLevel2ThisBinding.getToInterfaceNumber()))
-										|| (currLevel1Binding.getFromInterfaceNumber() == null && currLevel2ThisBinding.getToInterfaceNumber() == null))) {
-								
+											|| (currLevel1Binding.getFromInterfaceNumber() == null && currLevel2ThisBinding.getToInterfaceNumber() == null))) {
+
 								/* 
 								 * we do not wish to modify the level 2 definition (since another composite may use it),
 								 * in our source-driven approach
 								 */
 								Binding newLevel1Binding = ASTHelper.newBinding(nodeFactoryItf);
-								
+
 								/* 
 								 * Calculate the new name of the "leveled-up" target component and set it as new binding
 								 * target, modify the level 2 bindings since bindings are SOURCE-DRIVEN.
@@ -345,16 +350,16 @@ AbstractADLLoaderAnnotationProcessor {
 								newLevel1Binding.setToInterface(currLevel1Binding.getToInterface());
 								// handle collections
 								newLevel1Binding.setToInterfaceNumber(currLevel1Binding.getToInterfaceNumber());
-								
+
 								// duplicate the other currLevel2ThisBinding info
 								newLevel1Binding.setFromInterface(currLevel2ThisBinding.getFromInterface());
 								newLevel1Binding.setFromInterfaceNumber(currLevel2ThisBinding.getFromInterfaceNumber());
-								
+
 								// transfer level 1 annotation to the new level 1 bindings
 								applyAnnotations(currLevel1Binding, newLevel1Binding);
-								
+
 								// binding level-up ! (source-driven)
-								
+
 								// remove level 1 binding
 								level0DefAsBindingContainer.removeBinding(currLevel1Binding);
 								// add the new one
@@ -426,14 +431,14 @@ AbstractADLLoaderAnnotationProcessor {
 			}
 			if (!isSrcThis && !isTgtThis)
 				basicBindingsList.add(binding);
-			
+
 			// cleanup at each iteration for each next binding
 			isSrcThis = false;
 			isTgtThis = false;
 		}
 
 	}
-	
+
 	/**
 	 * Merging annotations from the extension node and the target definition node.
 	 * In the case of duplicates, the merge strategy is to override with the extension annotation.
