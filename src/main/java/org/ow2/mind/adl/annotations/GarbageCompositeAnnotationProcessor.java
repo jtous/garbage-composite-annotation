@@ -50,7 +50,13 @@ import org.ow2.mind.adl.parameter.ast.Argument;
 import org.ow2.mind.annotation.Annotation;
 import org.ow2.mind.annotation.AnnotationHelper.AnnotationDecoration;
 import org.ow2.mind.error.ErrorManager;
+import org.ow2.mind.value.ast.BooleanLiteral;
+import org.ow2.mind.value.ast.CompoundValue;
+import org.ow2.mind.value.ast.CompoundValueField;
+import org.ow2.mind.value.ast.NullLiteral;
+import org.ow2.mind.value.ast.NumberLiteral;
 import org.ow2.mind.value.ast.Reference;
+import org.ow2.mind.value.ast.StringLiteral;
 import org.ow2.mind.value.ast.Value;
 
 import com.google.inject.Inject;
@@ -100,7 +106,7 @@ AbstractADLLoaderAnnotationProcessor {
 					throws ADLException {
 
 		assert (annotation instanceof GarbageComposite || annotation instanceof Flatten);
-		
+
 		this.phase = phase;
 
 		if (ASTHelper.isComposite(definition))
@@ -260,13 +266,9 @@ AbstractADLLoaderAnnotationProcessor {
 					for (Argument currLevel1Argument : currLevel1CompDefArguments) {
 						for (Argument currLevel2Argument : currLevel2CompDefArguments) {
 							Value argValueObj = currLevel2Argument.getValue();
-							String argValueStr;
 
 							// different types of arguments can be found
-							if (argValueObj instanceof Reference)
-								argValueStr = ((Reference) argValueObj ).getRef();
-							else
-								argValueStr = ((Value) argValueObj).toString(); 
+							String argValueStr = getValueString(argValueObj);
 
 							// if level 1 and 2 arguments match, do the value propagation accordingly
 							if (currLevel1Argument.getName().equals(argValueStr))
@@ -474,6 +476,52 @@ AbstractADLLoaderAnnotationProcessor {
 		if (mergeResultDecoration != null)
 			destination.astSetDecoration("annotations", mergeResultDecoration);
 
+	}
+
+	/**
+	 * Mix of @see org.ow2.mind.doc.HTMLDocumentationHelper#getValueString and
+	 * @see AttributeInstantiator#toValueString
+	 * But here we don't want to add quotes "\"" "\"" at the beginning and
+	 * the end of StringLiteral-s (do not modify content) 
+	 * 
+	 * @param value
+	 * @return
+	 */
+	public String getValueString(final Value value) {
+		String valueString = null;
+		if(value != null) {
+
+			if (value instanceof NullLiteral) {
+				valueString = "NULL";
+			} else if (value instanceof BooleanLiteral) {
+				valueString = ((BooleanLiteral) value).getValue();
+			} else if (value instanceof NumberLiteral) {
+				valueString = ((NumberLiteral) value).getValue();
+			} else if (value instanceof StringLiteral) {
+				valueString = ((StringLiteral) value).getValue();
+			} else if (value instanceof Reference) {
+				valueString = ((Reference) value).getRef();
+			} else if (value instanceof CompoundValue) {
+				final StringBuilder sb = new StringBuilder();
+				sb.append("{");
+				final CompoundValueField[] fields = ((CompoundValue) value)
+						.getCompoundValueFields();
+				for (int i = 0; i < fields.length; i++) {
+					final CompoundValueField field = fields[i];
+					if (field.getName() != null) {
+						sb.append(".").append(field.getName()).append("=");
+					}
+					sb.append(getValueString(field.getValue()));
+					if (i < fields.length - 1) {
+						sb.append(", ");
+					}
+				}
+				sb.append("}");
+				return sb.toString();
+
+			}
+		}
+		return valueString;
 	}
 
 }

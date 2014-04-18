@@ -93,6 +93,14 @@ public class TestGarbageComposite extends AbstractGarbageCompositeTest {
 		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"Parameters");
 		runner.compileRunAndCheck("TemplateContainer", null);
 	}
+	
+	@Test(groups = {"checkin"})
+	public void testParameterTemplateContainerMulti() throws Exception {
+		cleanBuildDir();
+		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"Parameters");
+		runner.compileRunAndCheck("TemplateContainerMulti", null);
+	}
+	
 	@Test(groups = {"checkin"})
 	public void internalOnlyBinding() throws Exception {
 		cleanBuildDir();

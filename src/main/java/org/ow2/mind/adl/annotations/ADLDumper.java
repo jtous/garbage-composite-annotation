@@ -37,17 +37,26 @@ import org.objectweb.fractal.adl.interfaces.Interface;
 import org.objectweb.fractal.adl.interfaces.InterfaceContainer;
 import org.objectweb.fractal.adl.types.TypeInterface;
 import org.objectweb.fractal.adl.util.FractalADLLogManager;
-import org.ow2.mind.adl.anonymous.ast.AnonymousDefinitionContainer;
 import org.ow2.mind.adl.ast.ASTHelper;
 import org.ow2.mind.adl.ast.Binding;
 import org.ow2.mind.adl.ast.BindingContainer;
 import org.ow2.mind.adl.ast.Component;
 import org.ow2.mind.adl.ast.ComponentContainer;
+import org.ow2.mind.adl.ast.DefinitionReference;
 import org.ow2.mind.adl.ast.MindInterface;
-import org.ow2.mind.annotation.AnnotationHelper;
-import org.ow2.mind.io.BasicOutputFileLocator;
-import org.ow2.mind.io.OutputFileLocator;
+import org.ow2.mind.adl.parameter.ast.Argument;
+import org.ow2.mind.adl.parameter.ast.ArgumentContainer;
 import org.ow2.mind.annotation.Annotation;
+import org.ow2.mind.annotation.AnnotationHelper;
+import org.ow2.mind.io.OutputFileLocator;
+import org.ow2.mind.value.ast.BooleanLiteral;
+import org.ow2.mind.value.ast.CompoundValue;
+import org.ow2.mind.value.ast.CompoundValueField;
+import org.ow2.mind.value.ast.NullLiteral;
+import org.ow2.mind.value.ast.NumberLiteral;
+import org.ow2.mind.value.ast.Reference;
+import org.ow2.mind.value.ast.StringLiteral;
+import org.ow2.mind.value.ast.Value;
 
 import com.google.inject.Inject;
 
@@ -69,8 +78,8 @@ public class ADLDumper {
 	private static Logger logger = FractalADLLogManager.getLogger("ADLDumper");
 
 	@Inject
-    protected Loader        loaderItf;
-	
+	protected Loader        loaderItf;
+
 	@Inject
 	protected OutputFileLocator outputFileLocatorItf;
 
@@ -78,27 +87,27 @@ public class ADLDumper {
 	private String semicolon = ";";
 
 	public void dump(final Definition rootDefinition, Map<Object, Object> context, boolean dumpAnnotations) {
-		
+
 		this.dumpAnnotations = dumpAnnotations;
-		
+
 		// short name (no package) + _flat suffix
-        String filePath = rootDefinition.getName().replace('.', '/') + "_flat.adl";
+		String filePath = rootDefinition.getName().replace('.', '/') + "_flat.adl";
 
-        try {
-            initFile(filePath, context);
-            writeHeader(rootDefinition);
+		try {
+			initFile(filePath, context);
+			writeHeader(rootDefinition);
 
-            run(rootDefinition, context);
+			run(rootDefinition, context);
 
-            writeFooter();
-            flushBufferCloseFile();
+			writeFooter();
+			flushBufferCloseFile();
 
-        } catch (IOException e) {
-            logger.warning("Could not dump flattened " + rootDefinition.getName() + " ADL to file - File creation/writing error !");
-            return;
-        }
+		} catch (IOException e) {
+			logger.warning("Could not dump flattened " + rootDefinition.getName() + " ADL to file - File creation/writing error !");
+			return;
+		}
 	}
-	
+
 	private void flushBufferCloseFile() throws IOException {
 		outputFileBufferedWriter.close();
 	}
@@ -130,7 +139,7 @@ public class ADLDumper {
 			outputFileBufferedWriter.write(" * except for @Flatten that we skip.");
 			outputFileBufferedWriter.newLine();
 		}
-		
+
 		outputFileBufferedWriter.write(" */");
 		outputFileBufferedWriter.newLine();
 
@@ -138,7 +147,7 @@ public class ADLDumper {
 
 		writeAnnotations(rootDefinition, false);
 
-		outputFileBufferedWriter.write("composite " + rootDefinition.getName() + "_flat" + " {");
+		outputFileBufferedWriter.write("composite " + rootDefinition.getName() + "_flat {");
 		outputFileBufferedWriter.newLine();
 	}
 
@@ -189,7 +198,8 @@ public class ADLDumper {
 
 			for (int i = 0; i < subComponents.length; i++) {
 				try {
-					Definition subCompDef = ASTHelper.getResolvedComponentDefinition(subComponents[i], loaderItf, context);
+					Component subComp = subComponents[i];
+					Definition subCompDef = ASTHelper.getResolvedComponentDefinition(subComp, loaderItf, context);
 
 					/*
 					if (subComponents[i] instanceof AnonymousDefinitionContainer) {
@@ -211,8 +221,37 @@ public class ADLDumper {
 						outputFileBufferedWriter.newLine();
 						outputFileBufferedWriter.write(tab + "};");
 					} else { */
-					writeAnnotations(subComponents[i], true);
-					outputFileBufferedWriter.write(tab + "contains " + subCompDef.getName() + " as " + subComponents[i].getName() + semicolon);
+					writeAnnotations(subComp, true);
+					outputFileBufferedWriter.write(tab + "contains " + subCompDef.getName());
+
+					// -----------------
+					// Handle Arguments
+					// -----------------
+
+					// For this we need to obtain the current DefinitionReference matching the sub-component
+					// instance, and the according Arguments.
+					DefinitionReference subCompDefRef = subComp.getDefinitionReference();
+
+					if (subCompDefRef instanceof ArgumentContainer) {
+
+						outputFileBufferedWriter.write("(");
+
+						Argument[] currSubCompArgs = ((ArgumentContainer) subCompDefRef).getArguments();
+
+						for (int j = 0 ; j < currSubCompArgs.length ; j++) {
+							outputFileBufferedWriter.write(currSubCompArgs[j].getName() + " = ");
+
+							// Different kinds of Value-s can be encountered
+							outputFileBufferedWriter.write(getValueString(currSubCompArgs[j].getValue()));
+
+							if (j < currSubCompArgs.length - 1)
+								outputFileBufferedWriter.write(", ");
+						}
+
+						outputFileBufferedWriter.write(")");
+					}
+
+					outputFileBufferedWriter.write(" as " + subComponents[i].getName() + semicolon);
 					/*}*/
 				} catch (ADLException e) {
 					logger.warning("Could not serialize sub-component " + subComponents[i].getName() + " since its definition could not be resolved.");
@@ -282,6 +321,52 @@ public class ADLDumper {
 			outputFileBufferedWriter.write(line);
 			outputFileBufferedWriter.newLine();
 		}
+	}
+
+	/**
+	 * Mix of @see org.ow2.mind.doc.HTMLDocumentationHelper#getValueString and
+	 * @see AttributeInstantiator#toValueString
+	 * But here we don't want to add quotes "\"" "\"" at the beginning and
+	 * the end of StringLiteral-s (do not modify content) 
+	 * 
+	 * @param value
+	 * @return
+	 */
+	public String getValueString(final Value value) {
+		String valueString = null;
+		if(value != null) {
+
+			if (value instanceof NullLiteral) {
+				valueString = "NULL";
+			} else if (value instanceof BooleanLiteral) {
+				valueString = ((BooleanLiteral) value).getValue();
+			} else if (value instanceof NumberLiteral) {
+				valueString = ((NumberLiteral) value).getValue();
+			} else if (value instanceof StringLiteral) {
+				valueString = ((StringLiteral) value).getValue();
+			} else if (value instanceof Reference) {
+				valueString = ((Reference) value).getRef();
+			} else if (value instanceof CompoundValue) {
+				final StringBuilder sb = new StringBuilder();
+				sb.append("{");
+				final CompoundValueField[] fields = ((CompoundValue) value)
+						.getCompoundValueFields();
+				for (int i = 0; i < fields.length; i++) {
+					final CompoundValueField field = fields[i];
+					if (field.getName() != null) {
+						sb.append(".").append(field.getName()).append("=");
+					}
+					sb.append(getValueString(field.getValue()));
+					if (i < fields.length - 1) {
+						sb.append(", ");
+					}
+				}
+				sb.append("}");
+				return sb.toString();
+
+			}
+		}
+		return valueString;
 	}
 
 }

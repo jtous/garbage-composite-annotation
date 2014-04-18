@@ -1,0 +1,4 @@
+@Flatten(dumpADL=true)
+composite TemplateContainerMulti {
+ contains TemplateUserMulti as plop;
+}

@@ -1,0 +1,24 @@
+@Singleton
+primitive MultipleParamsPrimitive(intParam, stringParam, nullParam) {
+	
+	attribute int attr0 = intParam;
+	attribute string attr1 = stringParam;
+	attribute string attr2 = nullParam;
+	
+	source {{
+		int main(void)
+		{
+			#include <string.h>
+			
+			// strcmp gives 0 if ok
+			if (strcmp(ATTR(attr1), "string"))
+				return 1;
+				
+			if (ATTR(attr2) != (void*) 0)
+				return 2;
+			
+			//attr has been set to 8, we need to return 0 to pass the test ...
+			return 3 - ATTR(attr0);
+		}
+	}};
+}
