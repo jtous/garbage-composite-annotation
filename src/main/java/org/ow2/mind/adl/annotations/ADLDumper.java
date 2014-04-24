@@ -234,21 +234,24 @@ public class ADLDumper {
 
 					if (subCompDefRef instanceof ArgumentContainer) {
 
-						outputFileBufferedWriter.write("(");
-
 						Argument[] currSubCompArgs = ((ArgumentContainer) subCompDefRef).getArguments();
 
-						for (int j = 0 ; j < currSubCompArgs.length ; j++) {
-							outputFileBufferedWriter.write(currSubCompArgs[j].getName() + " = ");
+						if (currSubCompArgs.length > 0) {
 
-							// Different kinds of Value-s can be encountered
-							outputFileBufferedWriter.write(getValueString(currSubCompArgs[j].getValue()));
+							outputFileBufferedWriter.write("(");
 
-							if (j < currSubCompArgs.length - 1)
-								outputFileBufferedWriter.write(", ");
+							for (int j = 0 ; j < currSubCompArgs.length ; j++) {
+								outputFileBufferedWriter.write(currSubCompArgs[j].getName() + " = ");
+
+								// Different kinds of Value-s can be encountered
+								outputFileBufferedWriter.write(getValueString(currSubCompArgs[j].getValue()));
+
+								if (j < currSubCompArgs.length - 1)
+									outputFileBufferedWriter.write(", ");
+							}
+
+							outputFileBufferedWriter.write(")");
 						}
-
-						outputFileBufferedWriter.write(")");
 					}
 
 					outputFileBufferedWriter.write(" as " + subComponents[i].getName() + semicolon);
