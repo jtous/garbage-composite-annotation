@@ -37,13 +37,19 @@ import org.objectweb.fractal.adl.interfaces.Interface;
 import org.objectweb.fractal.adl.interfaces.InterfaceContainer;
 import org.objectweb.fractal.adl.types.TypeInterface;
 import org.objectweb.fractal.adl.util.FractalADLLogManager;
+import org.ow2.mind.adl.anonymous.AnonymousDefinitionExtractorImpl;
+import org.ow2.mind.adl.anonymous.AnonymousDefinitionLoader;
+import org.ow2.mind.adl.anonymous.ast.AnonymousDefinitionContainer;
 import org.ow2.mind.adl.ast.ASTHelper;
 import org.ow2.mind.adl.ast.Binding;
 import org.ow2.mind.adl.ast.BindingContainer;
 import org.ow2.mind.adl.ast.Component;
 import org.ow2.mind.adl.ast.ComponentContainer;
+import org.ow2.mind.adl.ast.Data;
 import org.ow2.mind.adl.ast.DefinitionReference;
+import org.ow2.mind.adl.ast.ImplementationContainer;
 import org.ow2.mind.adl.ast.MindInterface;
+import org.ow2.mind.adl.ast.Source;
 import org.ow2.mind.adl.parameter.ast.Argument;
 import org.ow2.mind.adl.parameter.ast.ArgumentContainer;
 import org.ow2.mind.annotation.Annotation;
@@ -160,67 +166,110 @@ public class ADLDumper {
 
 		assert ASTHelper.isComposite(definition);
 
+		String tabPrefix = tab;
+		
 		final Interface[] interfaces = ((InterfaceContainer) definition)
 				.getInterfaces();
 
-		if (interfaces != null) {
-			outputFileBufferedWriter.write(tab + "// "+ interfaces.length + " Interface(s)");
-			outputFileBufferedWriter.newLine();
-
-			for (int i = 0; i < interfaces.length; i++) {
-				final MindInterface itf = (MindInterface) interfaces[i];
-
-				writeAnnotations(itf, true);
-
-				outputFileBufferedWriter.write(tab
-						+ (itf.getRole() ==  TypeInterface.SERVER_ROLE ? "provides " : "requires ")
-						+ itf.getSignature() + " "
-						+ (itf.getContingency() != null ? itf.getContingency() : "")
-						+ "as " + itf.getName());
-				if (itf.getNumberOfElement() != null) {
-					outputFileBufferedWriter.write("[" + itf.getNumberOfElement() + "]");
-				}
-				outputFileBufferedWriter.write(semicolon);
-				outputFileBufferedWriter.newLine();
-			}
-			outputFileBufferedWriter.newLine();
-		}
+		writeInterfaces(interfaces, tabPrefix);
 
 		// sub-components
 		final Component[] subComponents = ((ComponentContainer) definition)
 				.getComponents();
 
-		// TODO: Handle anonymous components writing
+		writeSubComponents(subComponents, context);
 
-		if (subComponents != null) {
-			outputFileBufferedWriter.write(tab + "// "+ subComponents.length + " Subcomponent(s)");
-			outputFileBufferedWriter.newLine();
+		// bindings
+		final Binding[] bindings = ((BindingContainer) definition).getBindings();
 
-			for (int i = 0; i < subComponents.length; i++) {
-				try {
-					Component subComp = subComponents[i];
-					Definition subCompDef = ASTHelper.getResolvedComponentDefinition(subComp, loaderItf, context);
+		writeBindings(bindings);
+	}
 
-					/*
-					if (subComponents[i] instanceof AnonymousDefinitionContainer) {
-						outputFileBufferedWriter.write(tab + "contains as " + subComponents[i].getName());
+	private void writeSubComponents(Component[] subComponents, Map<Object, Object> context) throws IOException {
+		if (subComponents == null)
+			return;
+
+		outputFileBufferedWriter.write(tab + "// "+ subComponents.length + " Subcomponent(s)");
+		outputFileBufferedWriter.newLine();
+
+		for (int i = 0; i < subComponents.length; i++) {
+			try {
+				Component subComp = subComponents[i];
+				Definition subCompDef = ASTHelper.getResolvedComponentDefinition(subComp, loaderItf, context);
+
+				// TODO: enhance the compiler to have an "AnonymousDefinition" node type ?
+				// The AnonymousDefinitionContainer type isn't useful in our "late" phase of the ADL since it
+				// was already replaced with "null" earlier in the @see AnonymousDefinitionExtractorImpl
+				// lines 61 - 65 - 39
+				if (subCompDef.astGetType().equals("anonymousDefinition")) {
+					outputFileBufferedWriter.write(tab + "contains as " + subComponents[i].getName());
+					outputFileBufferedWriter.newLine();
+
+					writeAnnotations(subComponents[i], true);
+
+					assert ASTHelper.isPrimitive(subCompDef); // should be since all the GarbageComposite handling has been done
+					if (ASTHelper.isComposite(subCompDef)) {
+						logger.warning("Anonymous sub-component " + subComponents[i] + " should have been handled by garbage composite !! Skip !");
+						continue;
+					}
+
+					outputFileBufferedWriter.write(tab + "primitive {");
+					outputFileBufferedWriter.newLine();
+
+
+					final Interface[] subCompDefItfs = ((InterfaceContainer) subCompDef)
+							.getInterfaces();
+
+					String innerTabPrefix = tab + tab;
+					writeInterfaces(subCompDefItfs, innerTabPrefix);
+
+					// serialize primitive sources
+					Source[] subCompDefSrcs = ((ImplementationContainer) subCompDef).getSources();
+
+					if (subCompDefSrcs.length > 0) {
+						outputFileBufferedWriter.write(innerTabPrefix + "// "+ subCompDefSrcs.length + " Source(s)");
 						outputFileBufferedWriter.newLine();
-						writeAnnotations(subComponents[i], true);
-
-						assert ASTHelper.isPrimitive(subCompDef); // should be since all the GarbageComposite handling has been done
-						if (ASTHelper.isComposite(subCompDef)) {
-							logger.warning("Anonymous sub-component " + subComponents[i] + " should have been handled by garbage composite !! Skip !");
-							continue;
+					}
+					
+					for (Source currSrc : subCompDefSrcs) {
+						String currSrcPath = currSrc.getPath();
+						if (currSrcPath == null) {
+							outputFileBufferedWriter.write(tab + tab + "source {{");
+							outputFileBufferedWriter.newLine();
+							outputFileBufferedWriter.write(currSrc.getCCode());
+							outputFileBufferedWriter.write(tab + tab + "}}");
+						} else {
+							// Paths unhappily always start with "/"
+							if (currSrcPath.startsWith("/"))
+								currSrcPath = currSrcPath.substring(1);
+							
+							outputFileBufferedWriter.write(tab + tab + "source ");
+							outputFileBufferedWriter.write(currSrcPath);
 						}
 
-						outputFileBufferedWriter.write(tab + "primitive {");
+						outputFileBufferedWriter.write(semicolon);
 						outputFileBufferedWriter.newLine();
+					}
 
-						// TODO: serialize primitive component body
-
+					// serialize primitive data
+					Data subCompDefData = ((ImplementationContainer) subCompDef).getData();
+					if (subCompDefData != null) {
+						outputFileBufferedWriter.write(innerTabPrefix + "// Private data");
 						outputFileBufferedWriter.newLine();
-						outputFileBufferedWriter.write(tab + "};");
-					} else { */
+						
+						String currDataPath = subCompDefData.getPath();
+						if (currDataPath == null)
+							outputFileBufferedWriter.write(subCompDefData.getCCode());
+						else
+							outputFileBufferedWriter.write(currDataPath);
+
+						outputFileBufferedWriter.write(semicolon);
+						outputFileBufferedWriter.newLine();
+					}
+					//
+
+					outputFileBufferedWriter.write(tab + "};");
+				} else {
 					writeAnnotations(subComp, true);
 					outputFileBufferedWriter.write(tab + "contains " + subCompDef.getName());
 
@@ -256,43 +305,75 @@ public class ADLDumper {
 
 					outputFileBufferedWriter.write(" as " + subComponents[i].getName() + semicolon);
 					/*}*/
-				} catch (ADLException e) {
-					logger.warning("Could not serialize sub-component " + subComponents[i].getName() + " since its definition could not be resolved.");
-					continue;
 				}
+				
 				outputFileBufferedWriter.newLine();
+			
+			} catch (ADLException e) {
+				logger.warning("Could not serialize sub-component " + subComponents[i].getName() + " since its definition could not be resolved.");
+				continue;
 			}
+		}
+		
+		outputFileBufferedWriter.newLine();
+	}
+
+	private void writeBindings(Binding[] bindings) throws IOException {
+		if (bindings == null)
+			return;
+
+		if (bindings.length == 0)
+			outputFileBufferedWriter.write(tab + "// No binding");
+		else
+			outputFileBufferedWriter.write(tab + "// "+ bindings.length + " Binding(s)");
+
+		outputFileBufferedWriter.newLine();
+
+		for (int i = 0; i < bindings.length; i++) {
+			final Binding binding = bindings[i];
+
+			writeAnnotations(binding, true);
+
+			outputFileBufferedWriter.write(tab + "binds " + binding.getFromComponent() + "." + binding.getFromInterface());
+			if (binding.getFromInterfaceNumber() != null) {
+				outputFileBufferedWriter.write("[" + binding.getFromInterfaceNumber() + "]");
+			}
+			outputFileBufferedWriter.write(" to " + binding.getToComponent() + "." + binding.getToInterface());
+			if (binding.getToInterfaceNumber() != null) {
+				outputFileBufferedWriter.write("[" + binding.getToInterfaceNumber() + "]");
+			}
+			outputFileBufferedWriter.write(semicolon);
 			outputFileBufferedWriter.newLine();
 		}
 
-		// bindings
-		final Binding[] bindings = ((BindingContainer) definition).getBindings();
+		outputFileBufferedWriter.newLine();
+	}
 
-		if (bindings != null) {
-			if (bindings.length == 0)
-				outputFileBufferedWriter.write(tab + "// No binding");
-			else
-				outputFileBufferedWriter.write(tab + "// "+ bindings.length + " Binding(s)");
+	private void writeInterfaces(Interface[] interfaces, String tabPrefix) throws IOException {
+		if (interfaces == null)
+			return;
 
-			outputFileBufferedWriter.newLine();
+		outputFileBufferedWriter.write(tabPrefix + "// "+ interfaces.length + " Interface(s)");
+		outputFileBufferedWriter.newLine();
 
-			for (int i = 0; i < bindings.length; i++) {
-				final Binding binding = bindings[i];
+		for (int i = 0; i < interfaces.length; i++) {
+			final MindInterface itf = (MindInterface) interfaces[i];
 
-				writeAnnotations(binding, true);
+			writeAnnotations(itf, true);
 
-				outputFileBufferedWriter.write(tab + "binds " + binding.getFromComponent() + "." + binding.getFromInterface());
-				if (binding.getFromInterfaceNumber() != null) {
-					outputFileBufferedWriter.write("[" + binding.getFromInterfaceNumber() + "]");
-				}
-				outputFileBufferedWriter.write(" to " + binding.getToComponent() + "." + binding.getToInterface());
-				if (binding.getToInterfaceNumber() != null) {
-					outputFileBufferedWriter.write("[" + binding.getToInterfaceNumber() + "]");
-				}
-				outputFileBufferedWriter.write(semicolon);
-				outputFileBufferedWriter.newLine();
+			outputFileBufferedWriter.write(tabPrefix
+					+ (itf.getRole() ==  TypeInterface.SERVER_ROLE ? "provides " : "requires ")
+					+ itf.getSignature() + " "
+					+ (itf.getContingency() != null ? itf.getContingency() : "")
+					+ "as " + itf.getName());
+			if (itf.getNumberOfElement() != null) {
+				outputFileBufferedWriter.write("[" + itf.getNumberOfElement() + "]");
 			}
+			outputFileBufferedWriter.write(semicolon);
+			outputFileBufferedWriter.newLine();
 		}
+		
+		outputFileBufferedWriter.newLine();
 	}
 
 	/**
