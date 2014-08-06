@@ -127,8 +127,9 @@ AbstractADLLoaderAnnotationProcessor {
 
 	/**
 	 * Init the flatten recursion.
+	 * @throws ADLException 
 	 */
-	public void runFlatten(Definition definition, Map<Object, Object> context) {
+	public void runFlatten(Definition definition, Map<Object, Object> context) throws ADLException {
 
 		// new data containers: their reference will be provided to the "flatten" method to be
 		// filled at each level of the recursion
@@ -156,11 +157,12 @@ AbstractADLLoaderAnnotationProcessor {
 	 * @param level0Definition
 	 * @param componentsToUpperComposite
 	 * @param bindingsToUpperComposite
+	 * @throws ADLException 
 	 */
 	private void flatten(Definition level0Definition,
 			List<Component> componentsToUpperComposite,
 			List<Binding> bindingsToUpperComposite,
-			Map<Object, Object> context) {
+			Map<Object, Object> context) throws ADLException {
 
 		Definition currLevel1CompDef = null;
 
@@ -231,7 +233,12 @@ AbstractADLLoaderAnnotationProcessor {
 			}
 
 			// the PROVIDED arguments at the instantiation time are NOT in the definition (ex: contains Comp2(8) as comp;) but the definition REFERENCE (value 8 in example) 
-			currLevel1CompDefArguments = Arrays.asList(turnsToArgumentContainer(currLevel1Instance.getDefinitionReference(), nodeFactoryItf, nodeMergerItf).getArguments());
+			if (currLevel1Instance.getDefinitionReference() != null)
+				currLevel1CompDefArguments = Arrays.asList(turnsToArgumentContainer(currLevel1Instance.getDefinitionReference(), nodeFactoryItf, nodeMergerItf).getArguments());
+			else
+				currLevel1CompDefArguments = Arrays.asList(turnsToArgumentContainer(ASTHelper.getResolvedComponentDefinition(currLevel1Instance, loaderItf, context), nodeFactoryItf, nodeMergerItf).getArguments());
+
+
 
 			if (ASTHelper.isComposite(currLevel1CompDef)) {
 
@@ -260,7 +267,10 @@ AbstractADLLoaderAnnotationProcessor {
 					}
 
 					// the PROVIDED arguments at the instantiation time are NOT in the definition (ex: contains Comp2(8) as comp;) but the definition REFERENCE (value 8 in example)
-					currLevel2CompDefArguments = Arrays.asList(turnsToArgumentContainer(currLevel2Comp.getDefinitionReference(), nodeFactoryItf, nodeMergerItf).getArguments());
+					if (currLevel2Comp.getDefinitionReference() != null)
+						currLevel2CompDefArguments = Arrays.asList(turnsToArgumentContainer(currLevel2Comp.getDefinitionReference(), nodeFactoryItf, nodeMergerItf).getArguments());
+					else
+						currLevel2CompDefArguments = Arrays.asList(turnsToArgumentContainer(ASTHelper.getResolvedComponentDefinition(currLevel2Comp, loaderItf, context), nodeFactoryItf, nodeMergerItf).getArguments());
 
 					// propagate argument values as level 1 composite will be removed (and its arguments with it)
 					for (Argument currLevel1Argument : currLevel1CompDefArguments) {
@@ -276,8 +286,14 @@ AbstractADLLoaderAnnotationProcessor {
 						}
 					}					
 
-					Component newComp = ASTHelper.newComponent(nodeFactoryItf,
-							currLevel1InstanceName + "_" + currLevel2Comp.getName(), currLevel2Comp.getDefinitionReference());
+					Component newComp = null;
+					if (currLevel2Comp.getDefinitionReference() != null)
+						newComp = ASTHelper.newComponent(nodeFactoryItf,
+								currLevel1InstanceName + "_" + currLevel2Comp.getName(), currLevel2Comp.getDefinitionReference());
+					else
+						newComp = ASTHelper.newComponent(nodeFactoryItf,
+								currLevel1InstanceName + "_" + currLevel2Comp.getName(), ASTHelper.getResolvedComponentDefinition(currLevel2Comp, loaderItf, context).getName());
+
 
 					ASTHelper.setResolvedComponentDefinition(newComp, currLevel2CompDef);
 
@@ -409,7 +425,7 @@ AbstractADLLoaderAnnotationProcessor {
 	private Definition resolveComponentDefinition(Component component, Map<Object, Object> context) throws ADLException {
 		DefinitionReference	currCompDefRef = component.getDefinitionReference();
 		if (currCompDefRef == null)
-			return null;
+			return ASTHelper.getResolvedComponentDefinition(component, loaderItf, context);
 		return ASTHelper.getResolvedDefinition(currCompDefRef, loaderItf, context);
 	}
 
