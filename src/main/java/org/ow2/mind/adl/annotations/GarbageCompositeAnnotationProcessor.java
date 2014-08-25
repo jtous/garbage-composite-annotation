@@ -31,10 +31,13 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.objectweb.fractal.adl.ADLException;
+import org.objectweb.fractal.adl.CompilerError;
 import org.objectweb.fractal.adl.Definition;
 import org.objectweb.fractal.adl.Loader;
 import org.objectweb.fractal.adl.Node;
 import org.objectweb.fractal.adl.NodeFactory;
+import org.objectweb.fractal.adl.NodeUtil;
+import org.objectweb.fractal.adl.error.GenericErrors;
 import org.objectweb.fractal.adl.merger.MergeException;
 import org.objectweb.fractal.adl.merger.NodeMerger;
 import org.objectweb.fractal.adl.util.FractalADLLogManager;
@@ -179,8 +182,9 @@ AbstractADLLoaderAnnotationProcessor {
 		List<Binding> 	level1BindingsList 	= null;
 
 		// iteration utility
-		List<Argument> 	currLevel1CompDefArguments 		= null;
-		List<Argument> 	currLevel2CompDefArguments 		= null;
+		List<Argument> 	currLevel1CompDefRefArguments 		= null;
+		List<Argument> 	currLevel2CompDefRefArguments 		= null;
+		List<Argument> 	newCompDefRefArguments 		= null;
 
 		// new data containers: their reference will be provided to the "flatten" method to be filled at each
 		// level of the recursion
@@ -232,13 +236,13 @@ AbstractADLLoaderAnnotationProcessor {
 				continue;
 			}
 
-			// the PROVIDED arguments at the instantiation time are NOT in the definition (ex: contains Comp2(8) as comp;) but the definition REFERENCE (value 8 in example) 
-			if (currLevel1Instance.getDefinitionReference() != null)
-				currLevel1CompDefArguments = Arrays.asList(turnsToArgumentContainer(currLevel1Instance.getDefinitionReference(), nodeFactoryItf, nodeMergerItf).getArguments());
+			// the PROVIDED arguments at the instantiation time are NOT in the definition (ex: contains Comp2(8) as comp;) but the definition REFERENCE (value 8 in example)
+			DefinitionReference currLevel1InstanceDefRef = currLevel1Instance.getDefinitionReference();
+			if (currLevel1InstanceDefRef != null)
+				currLevel1CompDefRefArguments = Arrays.asList(turnsToArgumentContainer(currLevel1InstanceDefRef, nodeFactoryItf, nodeMergerItf).getArguments());
 			else
-				currLevel1CompDefArguments = Arrays.asList(turnsToArgumentContainer(ASTHelper.getResolvedComponentDefinition(currLevel1Instance, loaderItf, context), nodeFactoryItf, nodeMergerItf).getArguments());
-
-
+				// TODO: Check if this is perfectly ok (since it's not coming from a definition reference)
+				currLevel1CompDefRefArguments = Arrays.asList(turnsToArgumentContainer(ASTHelper.getResolvedComponentDefinition(currLevel1Instance, loaderItf, context), nodeFactoryItf, nodeMergerItf).getArguments());
 
 			if (ASTHelper.isComposite(currLevel1CompDef)) {
 
@@ -257,6 +261,22 @@ AbstractADLLoaderAnnotationProcessor {
 
 					Definition currLevel2CompDef = null;
 
+					// Prepare new sub-component instance
+					Component newComp = null;
+
+					DefinitionReference currLevel2CompDefRef = currLevel2Comp.getDefinitionReference();
+					
+					// work on a copy
+					DefinitionReference newCompDefRef = NodeUtil.cloneTree(currLevel2CompDefRef);
+					
+					if (currLevel2CompDefRef != null)
+						newComp = ASTHelper.newComponent(nodeFactoryItf,
+								currLevel1InstanceName + "_" + currLevel2Comp.getName(), newCompDefRef);
+					else
+						// TODO: Check if this is perfectly ok (since it's not coming from a definition reference)
+						newComp = ASTHelper.newComponent(nodeFactoryItf,
+								currLevel1InstanceName + "_" + currLevel2Comp.getName(), ASTHelper.getResolvedComponentDefinition(currLevel2Comp, loaderItf, context).getName());
+
 					try {
 						currLevel2CompDef = resolveComponentDefinition(currLevel2Comp, context);
 					} catch (ADLException e) {
@@ -265,38 +285,44 @@ AbstractADLLoaderAnnotationProcessor {
 						// cleanup just in case
 						continue;
 					}
-
-					// the PROVIDED arguments at the instantiation time are NOT in the definition (ex: contains Comp2(8) as comp;) but the definition REFERENCE (value 8 in example)
-					if (currLevel2Comp.getDefinitionReference() != null)
-						currLevel2CompDefArguments = Arrays.asList(turnsToArgumentContainer(currLevel2Comp.getDefinitionReference(), nodeFactoryItf, nodeMergerItf).getArguments());
-					else
-						currLevel2CompDefArguments = Arrays.asList(turnsToArgumentContainer(ASTHelper.getResolvedComponentDefinition(currLevel2Comp, loaderItf, context), nodeFactoryItf, nodeMergerItf).getArguments());
-
-					// propagate argument values as level 1 composite will be removed (and its arguments with it)
-					for (Argument currLevel1Argument : currLevel1CompDefArguments) {
-						for (Argument currLevel2Argument : currLevel2CompDefArguments) {
-							Value argValueObj = currLevel2Argument.getValue();
-
-							// different types of arguments can be found
-							String argValueStr = getValueString(argValueObj);
-
-							// if level 1 and 2 arguments match, do the value propagation accordingly
-							if (currLevel1Argument.getName().equals(argValueStr))
-								currLevel2Argument.setValue(currLevel1Argument.getValue());
-						}
-					}					
-
-					Component newComp = null;
-					if (currLevel2Comp.getDefinitionReference() != null)
-						newComp = ASTHelper.newComponent(nodeFactoryItf,
-								currLevel1InstanceName + "_" + currLevel2Comp.getName(), currLevel2Comp.getDefinitionReference());
-					else
-						newComp = ASTHelper.newComponent(nodeFactoryItf,
-								currLevel1InstanceName + "_" + currLevel2Comp.getName(), ASTHelper.getResolvedComponentDefinition(currLevel2Comp, loaderItf, context).getName());
-
-
 					ASTHelper.setResolvedComponentDefinition(newComp, currLevel2CompDef);
 
+					// the PROVIDED arguments at the instantiation time are NOT in the definition (ex: contains Comp2(8) as comp;) but the definition REFERENCE (value 8 in example)
+					if (newCompDefRef != null)
+						newCompDefRefArguments = Arrays.asList(turnsToArgumentContainer(newCompDefRef, nodeFactoryItf, nodeMergerItf).getArguments());
+					else
+						// TODO: Check if this is perfectly ok (since it's not coming from a definition reference)
+						newCompDefRefArguments = Arrays.asList(turnsToArgumentContainer(ASTHelper.getResolvedComponentDefinition(currLevel2Comp, loaderItf, context), nodeFactoryItf, nodeMergerItf).getArguments());
+
+					// propagate argument values as level 1 composite will be removed (and its arguments with it)
+					for (Argument currLevel1DefRefArgument : currLevel1CompDefRefArguments) {
+						for (Argument newCompDefRefArgument : newCompDefRefArguments) {
+
+							Value newCompDefRefArgValue = newCompDefRefArgument.getValue();
+							if (newCompDefRefArgValue instanceof Reference) {
+								final String l2ref = ((Reference) newCompDefRefArgValue).getRef();
+
+								if (currLevel1DefRefArgument.getName().equals(l2ref)) {
+
+									Value currLevel1DefRefArgValue = currLevel1DefRefArgument.getValue();
+									if (currLevel1DefRefArgValue instanceof Reference) {
+										// 2 references a reference in 1, referencing a value in 0
+										final String l1ref = ((Reference) currLevel1DefRefArgValue).getRef();
+										// Let's shortcut: 2 -> 0 (since 1 will be removed)
+										((Reference) newCompDefRefArgValue).setRef(l1ref);
+									} else {
+										// use directly referenced value
+										newCompDefRefArgument.setValue(currLevel1DefRefArgValue);
+									}
+								}
+							} // else if not a reference, keep value
+						}
+					}
+
+					// New component instance must have arguments information from the original definition reference we just modified
+					newComp.setDefinitionReference(newCompDefRef);
+
+					// Add to level 0
 					level0DefAsComponentContainer.addComponent(newComp);
 				}
 
@@ -538,6 +564,16 @@ AbstractADLLoaderAnnotationProcessor {
 			}
 		}
 		return valueString;
+	}
+
+	protected DefinitionReference newDefinitionReferenceNode() {
+		try {
+			return (DefinitionReference) nodeFactoryItf.newNode("definitionReference",
+					DefinitionReference.class.getName());
+		} catch (final ClassNotFoundException e) {
+			throw new CompilerError(GenericErrors.INTERNAL_ERROR, e,
+					"Node factory error");
+		}
 	}
 
 }
