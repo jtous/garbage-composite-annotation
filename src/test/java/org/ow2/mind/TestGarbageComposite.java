@@ -269,5 +269,18 @@ public class TestGarbageComposite extends AbstractGarbageCompositeTest {
 		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"Anonymous");
 		runner.compileRunAndCheck("Anonymous2", null);
 	}
+	
+	/**
+	 * Test flattening with multiple instances of same composite definition with different argument
+	 * per instance (propagated to sub-components).
+	 * This is a non-regression test (an issue in the algorithm existed previously).
+	 * @throws Exception
+	 */
+	@Test(groups = {"checkin"})
+	public void argumentPropagation() throws Exception {
+		cleanBuildDir();
+		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"ArgumentPropagation");
+		runner.compileRunAndCheck("Level0", null);
+	}
 
 }

@@ -1,0 +1,21 @@
+
+/**
+ * Check critical error: old flatten replaced the argument key-value node in the definition by only
+ * the value when meeting the first one, leading all others instances argument not to be resolved
+ * (since no "key" was available anymore), thus leading all same-definition arguments to be set at
+ * the same first encountered value !
+ */
+@Singleton
+composite Level1(expectedValue0, expectedValue1) {
+	
+	// contains the "main", no bootstrap
+	contains Client(expectedValue0, expectedValue1) as clientComp;
+	
+	contains Level2(0) as l2_0;
+	contains Level2(1000) as l2_1000;
+	
+	binds clientComp.dataAccess0 to l2_0.dataAccess;
+	
+	binds clientComp.dataAccess1000 to l2_1000.dataAccess;
+	
+}

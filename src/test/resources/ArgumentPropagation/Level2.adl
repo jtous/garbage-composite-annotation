@@ -1,0 +1,9 @@
+
+composite Level2(value) {
+	
+	provides Data as dataAccess;
+	
+	contains ServerArguments(value) as server;
+	
+	binds this.dataAccess to server.dataItf;
+}

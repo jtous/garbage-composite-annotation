@@ -1,0 +1,26 @@
+
+/**
+ * Check critical error:
+ * When a composite with arguments was instantiated more than once, all the argument of the other instances
+ * would get the same arguments value as the first.
+ *
+ * Explanation:
+ * Old flatten algo replaced the argument key-value node in the definition by only
+ * the value, losing "key" info when meeting the first one. All others instances arguments could thus
+ * not be resolved (since no "key" was available anymore).
+ * 
+ * How to check:
+ * 1/ Return value from Client.c
+ * 2/ Opening the flattened result serialized in generated Level0_flat.adl:
+ * With bug:
+ * contains ServerArguments(INTVALUE = 0) as intermediateComp_l2_0_server;
+ * contains ServerArguments(INTVALUE = 0) as intermediateComp_l2_1000_server;
+ * After fix:
+ * contains ServerArguments(INTVALUE = 0) as intermediateComp_l2_0_server;
+ * contains ServerArguments(INTVALUE = 1000) as intermediateComp_l2_1000_server;
+ * 
+ */
+@Singleton
+composite Level0 {
+	contains Level1(0, 1000) as intermediateComp;
+}
