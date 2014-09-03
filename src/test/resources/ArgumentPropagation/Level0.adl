@@ -21,6 +21,7 @@
  * 
  */
 @Singleton
+@Flatten(dumpADL=true)
 composite Level0 {
 	contains Level1(0, 1000) as intermediateComp;
 }

@@ -111,7 +111,8 @@ public class GarbageCompositeCompilerRunner {
 		options.addOptions(CommandLineOptionExtensionHelper.getCommandOptions(pluginManager));
 		// parse arguments to a CommandLine.
 		try {
-			// If needed, we could use this variation to enable --flatten everytime 
+			// If needed, we could use this variation to enable --flatten everytime
+			// Note: To this day, we still use @Flatten / @GarbageComposite in the test ADLs instead !
 			//final CommandLine cmdLine = CommandLine.parseArgs(options, false, "--flatten");
 			
 			final CommandLine cmdLine = CommandLine.parseArgs(options, false, "");
