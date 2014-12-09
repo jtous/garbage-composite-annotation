@@ -1,0 +1,12 @@
+
+@Singleton
+primitive Client(EXPECTEDVALUE0, EXPECTEDVALUE1) {
+ 	
+ 	attribute int expectedValue0 = EXPECTEDVALUE0;
+ 	attribute int expectedValue1 = EXPECTEDVALUE1;
+ 	
+	requires Data as dataAccess0;
+	requires Data as dataAccess1000;
+	
+	source Client.c;
+}

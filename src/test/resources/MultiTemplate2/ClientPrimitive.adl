@@ -1,0 +1,15 @@
+@Singleton
+primitive ClientPrimitive {
+	requires GetValue as client1;
+	requires GetValue as client2;
+
+	source {{
+		int main(void)
+		{
+			int res1 = CALL(client1,run)();
+			int res2 = CALL(client2,run)();
+			
+			return res1 + res2; // 8 + (-8) = 0
+		}
+	}}
+}

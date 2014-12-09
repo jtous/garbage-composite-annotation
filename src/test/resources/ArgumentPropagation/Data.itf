@@ -1,0 +1,4 @@
+
+interface Data {
+	int get(void);
+}

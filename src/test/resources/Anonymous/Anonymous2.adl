@@ -1,0 +1,13 @@
+@Flatten(dumpADL=true, dumpAnnotations=true)
+@Singleton
+composite Anonymous2 {
+	
+	// anonymous type declaration for clt with inheritance and annotation
+	contains ClientPrimitive as clt @Singleton primitive { };
+
+	contains Comp1 as Comp1_0;
+	contains Comp1 as Comp1_1;
+	
+	binds clt.client1 to Comp1_0.server;
+	binds clt.client2 to Comp1_1.server;
+}

@@ -1,0 +1,10 @@
+@Flatten
+@Singleton
+composite MultiComposite1 {
+	contains ClientPrimitive as clt;
+	contains Comp1 as Comp1_0;
+	contains Comp1 as Comp1_1;
+	
+	binds clt.client1 to Comp1_0.server;
+	binds clt.client2 to Comp1_1.server;
+}

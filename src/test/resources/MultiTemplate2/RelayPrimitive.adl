@@ -1,0 +1,9 @@
+
+primitive RelayPrimitive extends RelayType {
+	source {{
+		int METH(srv, run)(void)
+		{
+			return CALL(clt, run)();
+		}
+	}}
+}

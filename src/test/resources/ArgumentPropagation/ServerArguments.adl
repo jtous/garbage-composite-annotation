@@ -1,0 +1,8 @@
+primitive ServerArguments(INTVALUE) {
+ 	
+ 	provides Data as dataItf;
+ 	
+	attribute int intvalue = INTVALUE;
+	
+	source ServerArguments.c;
+}

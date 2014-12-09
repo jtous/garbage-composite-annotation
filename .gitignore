@@ -1,0 +1,14 @@
+# Java #
+*.class
+# Package Files #
+*.jar
+*.war
+*.ear
+# Maven #
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.next
+release.properties
+# TestNG #
+test-output/

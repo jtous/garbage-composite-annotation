@@ -1,0 +1,17 @@
+@Flatten
+composite TemplateUser3 {
+	
+	contains ClientPrimitive as cltComp;
+	
+	contains Template1<RelayPrimitive> as relay1;
+	contains Template2<Template1<RelayPrimitive>, Template1<RelayPrimitive>> as relay2;
+	
+	contains ServerPrimitiveArg(8, -8) as srvComp;
+	
+	binds cltComp.client1 to relay1.srv;
+	binds cltComp.client2 to relay2.srv;
+	
+	binds relay1.clt to srvComp.srv1;
+	binds relay2.clt to srvComp.srv2;
+	
+}

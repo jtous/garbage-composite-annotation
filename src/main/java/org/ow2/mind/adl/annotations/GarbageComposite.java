@@ -26,6 +26,7 @@ import org.ow2.mind.adl.annotation.ADLAnnotationTarget;
 import org.ow2.mind.adl.annotation.ADLLoaderPhase;
 import org.ow2.mind.adl.annotation.ADLLoaderProcessor;
 import org.ow2.mind.annotation.Annotation;
+import org.ow2.mind.annotation.AnnotationElement;
 import org.ow2.mind.annotation.AnnotationTarget;
 
 /**
@@ -40,6 +41,12 @@ public class GarbageComposite implements Annotation {
 	private static final long serialVersionUID = 1L;
 	private static final AnnotationTarget[] ANNOTATION_TARGETS = { ADLAnnotationTarget.DEFINITION };
 
+	@AnnotationElement(hasDefaultValue = true)
+	public boolean dumpADL = false;
+	
+	@AnnotationElement(hasDefaultValue = true)
+	public boolean dumpAnnotations = false;
+	
     /*
      * (non-Javadoc)
      * 
@@ -56,6 +63,10 @@ public class GarbageComposite implements Annotation {
      */
     public boolean isInherited() {
 	return true;
+    }
+    
+    public String toString() {
+    	return "@Flatten";
     }
 
 }

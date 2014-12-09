@@ -1,4 +1,4 @@
-//@GarbageComposite
+@Flatten(dumpADL=true)
 composite TemplateContainer {
  contains TemplateUser as plop;
 }

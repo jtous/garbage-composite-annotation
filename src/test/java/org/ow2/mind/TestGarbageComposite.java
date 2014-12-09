@@ -28,7 +28,7 @@ import java.io.File;
 
 import org.testng.annotations.Test;
 
-public class TestGarbageComposite extends AbstractFunctionalTest {
+public class TestGarbageComposite extends AbstractGarbageCompositeTest {
 
 	protected static File         buildDir = new File("target/build/");
 	
@@ -41,7 +41,7 @@ public class TestGarbageComposite extends AbstractFunctionalTest {
 			for (final File subFile : f.listFiles())
 				deleteDir(subFile);
 		}
-		f.delete();
+		while (!f.delete());
 		assertTrue(!f.exists(), "Couldn't delete \"" + f + "\".");
 	}
 	
@@ -93,6 +93,14 @@ public class TestGarbageComposite extends AbstractFunctionalTest {
 		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"Parameters");
 		runner.compileRunAndCheck("TemplateContainer", null);
 	}
+	
+	@Test(groups = {"checkin"})
+	public void testParameterTemplateContainerMulti() throws Exception {
+		cleanBuildDir();
+		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"Parameters");
+		runner.compileRunAndCheck("TemplateContainerMulti", null);
+	}
+	
 	@Test(groups = {"checkin"})
 	public void internalOnlyBinding() throws Exception {
 		cleanBuildDir();
@@ -189,6 +197,90 @@ public class TestGarbageComposite extends AbstractFunctionalTest {
 		cleanBuildDir();
 		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"MultiInternalClientBinding");
 		runner.compileRunAndCheck("MultiInternalClientBinding3", null);
+	}
+	
+	@Test(groups = {"checkin"})
+	public void multiInternalServerBinding1() throws Exception {
+		cleanBuildDir();
+		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"MultiInternalServerBinding");
+		runner.compileRunAndCheck("MultiInternalServerBinding1", null);
+	}
+	
+	@Test(groups = {"checkin"})
+	public void multiInternalServerBinding2() throws Exception {
+		cleanBuildDir();
+		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"MultiInternalServerBinding");
+		runner.compileRunAndCheck("MultiInternalServerBinding2", null);
+	}
+	
+	@Test(groups = {"checkin"})
+	public void multiTemplate() throws Exception {
+		cleanBuildDir();
+		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"MultiTemplate");
+		runner.compileRunAndCheck("TemplateUser1", null);
+	}
+	
+	@Test(groups = {"checkin"})
+	public void multiComposite1() throws Exception {
+		cleanBuildDir();
+		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"MultiComposite");
+		runner.compileRunAndCheck("MultiComposite1", null);
+	}
+	
+	@Test(groups = {"checkin"})
+	public void multiTemplate2() throws Exception {
+		cleanBuildDir();
+		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"MultiTemplate2");
+		runner.compileRunAndCheck("TemplateUser2", null);
+	}
+	
+	@Test(groups = {"checkin"})
+	public void multiTemplate3() throws Exception {
+		cleanBuildDir();
+		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"MultiTemplate2");
+		runner.compileRunAndCheck("TemplateUser3", null);
+	}
+	
+	@Test(groups = {"checkin"})
+	public void multiTemplate4() throws Exception {
+		cleanBuildDir();
+		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"MultiTemplate2");
+		runner.compileRunAndCheck("TemplateUser4", null);
+	}
+	
+	/**
+	 * Test flattening anonymous components (with inlined content)
+	 * @throws Exception
+	 */
+	@Test(groups = {"checkin"})
+	public void anonymous1() throws Exception {
+		cleanBuildDir();
+		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"Anonymous");
+		runner.compileRunAndCheck("Anonymous1", null);
+	}
+	
+	/**
+	 * Test flattening anonymous components (simple refining with inheritance)
+	 * @throws Exception
+	 */
+	@Test(groups = {"checkin"})
+	public void anonymous2() throws Exception {
+		cleanBuildDir();
+		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"Anonymous");
+		runner.compileRunAndCheck("Anonymous2", null);
+	}
+	
+	/**
+	 * Test flattening with multiple instances of same composite definition with different argument
+	 * per instance (propagated to sub-components).
+	 * This is a non-regression test (an issue in the algorithm existed previously).
+	 * @throws Exception
+	 */
+	@Test(groups = {"checkin"})
+	public void argumentPropagation() throws Exception {
+		cleanBuildDir();
+		initSourcePath(getDepsDir("memory/api/Allocator.itf").getAbsolutePath(),"ArgumentPropagation");
+		runner.compileRunAndCheck("Level0", null);
 	}
 
 }

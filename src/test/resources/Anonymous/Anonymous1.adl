@@ -1,0 +1,27 @@
+@Flatten(dumpADL=true, dumpAnnotations=true)
+@Singleton
+composite Anonymous1 {
+	
+	
+	contains as clt 
+	@Singleton
+	primitive {
+		requires dummy as client1;
+		requires dummy as client2;
+		
+		source {{
+			int main(void)
+			{
+				CALL(client1,run)();
+				CALL(client2,run)();
+				return 0;
+			}
+		}}
+	};
+
+	contains Comp1 as Comp1_0;
+	contains Comp1 as Comp1_1;
+	
+	binds clt.client1 to Comp1_0.server;
+	binds clt.client2 to Comp1_1.server;
+}

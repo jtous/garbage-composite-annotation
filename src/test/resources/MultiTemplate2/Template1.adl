@@ -1,0 +1,6 @@
+//@Flatten
+composite Template1<ParamComp conformsto RelayType> extends RelayType {
+	contains ParamComp as comp;
+	binds this.srv to comp.srv;
+	binds comp.clt to this.clt;
+}

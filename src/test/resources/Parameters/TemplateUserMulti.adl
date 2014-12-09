@@ -1,0 +1,2 @@
+composite TemplateUserMulti extends Template<MultipleParamsPrimitive(3, "string", null)> {
+}

@@ -1,0 +1,11 @@
+@Singleton
+primitive SimplePrimitive1(primitiveParameter) extends GetValueType {
+	attribute int attr = primitiveParameter;
+	source {{
+		int METH(srv, run)(void)
+		{
+			//attr has been set to 8
+			return ATTR(attr);
+		}
+	}};
+}
